@@ -11,6 +11,7 @@ struct PanelView: View {
     @ObservedObject var model: AppModel
     let actions: PanelActions
     @FocusState private var searchFocused: Bool
+    @Namespace private var filterNS
 
     private let filters: [(String, ClipKind?)] = [
         ("Tutto", nil), ("Testo", .text), ("Rich", .richText), ("Link", .link), ("Immagini", .image), ("File", .file), ("Colori", .color),
@@ -50,16 +51,33 @@ struct PanelView: View {
                 .strokeBorder(searchFocused ? Color.trove.opacity(0.7) : Color.hairline, lineWidth: searchFocused ? 1.5 : 0.5))
             .frame(maxWidth: 480)
 
-            Picker("Tipo", selection: $model.kindFilter) {
-                ForEach(filters, id: \.0) { name, kind in Text(name).tag(kind) }
-            }
-            .pickerStyle(.segmented).labelsHidden().fixedSize()
+            filterBar
             Spacer()
             Text(model.query.isEmpty && model.kindFilter == nil ? (model.totalCount == 1 ? "1 elemento" : "\(model.totalCount) elementi") : (model.results.count == 1 ? "1 risultato" : "\(model.results.count) risultati"))
                 .font(Theme.ui(12)).foregroundStyle(.secondary).monospacedDigit()
             Button(action: actions.settings) { Image(systemName: "gearshape") }
                 .buttonStyle(.borderless).foregroundStyle(.secondary).help("Impostazioni (⌘,)")
                 .accessibilityLabel("Impostazioni")
+        }
+    }
+
+    /// Filtri a capsula senza cornice né divisori: il fondo della selezione scorre tra le voci.
+    private var filterBar: some View {
+        HStack(spacing: 2) {
+            ForEach(filters, id: \.0) { name, kind in
+                let on = model.kindFilter == kind
+                Button { withAnimation(.snappy(duration: 0.2)) { model.kindFilter = kind } } label: {
+                    Text(name).font(Theme.ui(12, on ? .semibold : .regular))
+                        .foregroundStyle(on ? .primary : .secondary)
+                        .padding(.horizontal, 10).padding(.vertical, 4)
+                        .background {
+                            if on { Capsule().fill(.primary.opacity(0.1)).matchedGeometryEffect(id: "filter", in: filterNS) }
+                        }
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(on ? .isSelected : [])
+            }
         }
     }
 
