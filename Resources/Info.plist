@@ -2,9 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>CFBundleDevelopmentRegion</key><string>en</string>
     <key>CFBundleName</key><string>Trove</string>
     <key>CFBundleDisplayName</key><string>Trove</string>
-    <key>CFBundleIdentifier</key><string>io.trove.app</string>
+    <key>CFBundleIdentifier</key><string>io.github.cannoloops.trove</string>
     <key>CFBundleExecutable</key><string>Trove</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleShortVersionString</key><string>1.0.0</string>
@@ -14,5 +15,8 @@
     <key>LSUIElement</key><true/>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSHumanReadableCopyright</key><string>© 2026 Trove contributors</string>
+    <key>SUFeedURL</key><string>https://github.com/cannoloops/trove/releases/latest/download/appcast.xml</string>
+    <key>SUPublicEDKey</key><string>TyuqgTnEqhqkwgLequ6UtIpzQCEV0aRZgwHltwsewJk=</string>
+    <key>SUEnableAutomaticChecks</key><true/>
 </dict>
 </plist>

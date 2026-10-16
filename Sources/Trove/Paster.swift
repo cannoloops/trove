@@ -15,7 +15,7 @@ enum Paster {
     static let aiApps: Set<String> = [
         "com.openai.chat", "com.openai.codex", "com.anthropic.claudefordesktop", "ai.perplexity.mac", "ai.perplexity.macv3", "com.google.GeminiMacOS",
     ]
-    static let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("io.trove.app/paste")
+    static let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("io.github.cannoloops.trove/paste")
 
     static var redactForAI: Bool { UserDefaults.standard.object(forKey: "redactForAI") as? Bool ?? true }
 

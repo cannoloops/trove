@@ -1,6 +1,7 @@
 import AppKit
 import SwiftUI
 import TroveCore
+import Sparkle
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -13,6 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var settingsWindow: NSWindow?
     private let settings = SettingsModel()
     private var enrichQueue: Task<Void, Never>?
+    private let updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
 
     static let dataDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         .appendingPathComponent("Trove")
@@ -20,8 +22,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         do { store = try Store(directory: Self.dataDir) } catch {
             let a = NSAlert()
-            a.messageText = "Trove non riesce ad aprire la history"
-            a.informativeText = "\(error)\n\nCartella: \(Self.dataDir.path)"
+            let detail = "\(error)"
+            a.messageText = String(localized: "Trove non riesce ad aprire la history")
+            a.informativeText = String(localized: "\(detail)\n\nCartella: \(Self.dataDir.path)")
             a.runModal()
             NSApp.terminate(nil)
             return
@@ -78,8 +81,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel.hide()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { Paster.sendPaste() }
         if hidden > 0 {
-            Toast.show(hidden == 1 ? "1 segreto nascosto con un segnaposto" : "\(hidden) segreti nascosti con segnaposto",
-                       detail: "Per incollare l’originale disattiva l’opzione in Impostazioni › AI e agenti.")
+            Toast.show(hidden == 1 ? String(localized: "1 segreto nascosto con un segnaposto") : String(localized: "\(hidden) segreti nascosti con segnaposto"),
+                       detail: String(localized: "Per incollare l’originale disattiva l’opzione in Impostazioni › AI e agenti."))
         }
     }
 
@@ -123,17 +126,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func backupNow(manual: Bool) {
         let store = store!
-        settings.backupStatus = "Backup in corso…"
+        settings.backupStatus = String(localized: "Backup in corso…")
         let settings = settings
         Task {
             let r = await Task.detached(priority: .utility) { Result { try Backup.runToDrive(store: store) } }.value
             switch r {
             case .success(let dest):
                 settings.lastBackup = Backup.lastBackupDate(at: dest)
-                settings.backupStatus = "Backup completato in \(dest.path)."
+                settings.backupStatus = String(localized: "Backup completato in \(dest.path).")
             case .failure(let error):
                 settings.backupStatus = error as? BackupError == .driveNotFound
-                    ? "Google Drive per desktop non trovato." : "Backup non riuscito: \(error.localizedDescription)"
+                    ? String(localized: "Google Drive per desktop non trovato.") : String(localized: "Backup non riuscito: \(error.localizedDescription)")
                 if manual { NSSound.beep() }
             }
         }
@@ -148,10 +151,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } catch {
             // i dati locali non sono stati toccati: si riapre lo stesso DB
             let msg = error as? BackupError == .backupCorrupted
-                ? "Il backup su Drive non è leggibile (forse non ancora scaricato): la history locale è intatta."
-                : "Ripristino non riuscito: \(error.localizedDescription). La history locale è intatta."
+                ? String(localized: "Il backup su Drive non è leggibile (forse non ancora scaricato): la history locale è intatta.")
+                : String(localized: "Ripristino non riuscito: \(error.localizedDescription). La history locale è intatta.")
             let a = NSAlert()
-            a.messageText = "Ripristino non riuscito"
+            a.messageText = String(localized: "Ripristino non riuscito")
             a.informativeText = msg
             NSApp.activate()
             a.runModal()
@@ -174,14 +177,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.image = NSImage(systemSymbolName: "list.clipboard", accessibilityDescription: "Trove")
         let menu = NSMenu()
-        let open = NSMenuItem(title: "Apri Trove", action: #selector(openPanel), keyEquivalent: "")
+        let open = NSMenuItem(title: String(localized: "Apri Trove"), action: #selector(openPanel), keyEquivalent: "")
         menu.addItem(open)
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Esegui backup ora", action: #selector(menuBackup), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Impostazioni…", action: #selector(openSettingsAction), keyEquivalent: ","))
+        menu.addItem(NSMenuItem(title: String(localized: "Esegui backup ora"), action: #selector(menuBackup), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: String(localized: "Impostazioni…"), action: #selector(openSettingsAction), keyEquivalent: ","))
+        let check = NSMenuItem(title: String(localized: "Controlla aggiornamenti…"), action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)), keyEquivalent: "")
+        menu.addItem(check)
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Esci da Trove", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: String(localized: "Esci da Trove"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         menu.items.forEach { if $0.action != #selector(NSApplication.terminate(_:)) { $0.target = self } }
+        check.target = updater
         statusItem.menu = menu
     }
 
@@ -193,7 +199,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel.hide()
         if settingsWindow == nil {
             let w = NSWindow(contentViewController: NSHostingController(rootView: SettingsView(s: settings, app: model)))
-            w.title = "Impostazioni di Trove"
+            w.title = String(localized: "Impostazioni di Trove")
             w.styleMask = [.titled, .closable]
             w.isReleasedWhenClosed = false
             w.center()
