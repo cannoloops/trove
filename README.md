@@ -8,7 +8,7 @@ A clipboard history manager for macOS 26. Press **⇧⌘V**, find what you copie
 - Search by words, by text inside images (OCR) and by meaning, on-device (uses Apple Intelligence when available)
 - Filters: `type:image`, `app:Safari`, `today`
 - **⌥↩** pastes a cleaned-up version: terminal artifacts removed, secrets replaced by placeholders like `<OPENAI_KEY_1>`
-- Pasting into ChatGPT, Claude, Perplexity or Gemini masks API keys, tokens, passwords, cards and IBANs automatically
+- Pasting into the ChatGPT, Claude, Perplexity or Gemini desktop apps masks API keys, tokens, passwords, cards and IBANs automatically
 - Images pasted into a terminal become a file path
 - Optional backup to Google Drive for desktop (`My Drive/Trove`)
 - English and Italian UI
@@ -27,6 +27,35 @@ Everything stays on your Mac, in `~/Library/Application Support/Trove`.
 Trove checks for updates by itself (menu bar icon › Check for Updates…). Because builds are not Developer ID signed, macOS may forget the Accessibility permission after an update: if pasting stops working, remove Trove from the Accessibility list and add it again.
 
 Requires macOS 26 on Apple silicon.
+
+## Usage
+
+Press **⇧⌘V** (configurable in Settings) to open the panel over the current app.
+
+| Key | Action |
+|---|---|
+| ← → | Move the selection |
+| ↩ | Paste into the app you were using |
+| ⇧↩ | Paste as plain text |
+| ⌥↩ | Paste cleaned up and without secrets ([details](docs/guide.md#smart-paste)) |
+| ⌘1 … ⌘9 | Paste the n-th result (add ⇧ for plain text) |
+| Space | Preview (when the search field is empty) |
+| ⌘C | Copy without pasting |
+| ⌘⌫ | Delete the selected item |
+| ⌘, | Settings |
+| Esc | Close the preview, clear the search, then hide the panel |
+
+Type to search. Words can be combined with filters:
+
+| Filter | Example |
+|---|---|
+| `type:` `text`, `link`, `image`, `file`, `color` | `type:image invoice` |
+| `app:` source app | `app:safari` |
+| `today`, `yesterday`, `week`, `month` | `password reset week` |
+
+Search is typo-tolerant and ignores accents. It also matches text recognized inside images and, when the semantic index is ready, things with a similar meaning ("receipt" finds "invoice"). Italian filter names (`tipo:`, `oggi`, `ieri`, `settimana`, `mese`) work too.
+
+More in the [user guide](docs/guide.md): smart paste, secrets, backup and restore, privacy, troubleshooting and uninstalling.
 
 ## Build from source
 
