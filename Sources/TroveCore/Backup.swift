@@ -1,6 +1,6 @@
 import Foundation
 
-public enum BackupError: Error, Equatable { case driveNotFound, backupMissing }
+public enum BackupError: Error, Equatable { case driveNotFound, backupMissing, backupCorrupted }
 
 /// Backup nella cartella locale di Google Drive per desktop (che sincronizza da sé).
 public enum Backup {
@@ -33,14 +33,13 @@ public enum Backup {
         let fm = FileManager.default
         let blobs = dest.appendingPathComponent("blobs")
         try fm.createDirectory(at: blobs, withIntermediateDirectories: true)
-        let tmp = dest.appendingPathComponent("trove.sqlite.tmp")
+        // il file temporaneo sta fuori dalla cartella sincronizzata, così Drive non lo carica a metà
+        let tmp = fm.temporaryDirectory.appendingPathComponent("trove-backup-\(UUID().uuidString).sqlite")
+        defer { try? fm.removeItem(at: tmp) }
         try store.vacuum(into: tmp)
         let final = dest.appendingPathComponent("trove.sqlite")
         if fm.fileExists(atPath: final.path) { _ = try fm.replaceItemAt(final, withItemAt: tmp) } else { try fm.moveItem(at: tmp, to: final) }
-        let existing = Set((try? fm.contentsOfDirectory(atPath: blobs.path)) ?? [])
-        for f in (try? fm.contentsOfDirectory(atPath: store.blobsDir.path)) ?? [] where !existing.contains(f) {
-            try fm.copyItem(at: store.blobsDir.appendingPathComponent(f), to: blobs.appendingPathComponent(f))
-        }
+        try syncBlobs(from: store.blobsDir, to: blobs)
     }
 
     public static func lastBackupDate(at dest: URL) -> Date? {
@@ -48,17 +47,34 @@ public enum Backup {
     }
 
     /// Sostituisce i dati locali con il backup. Lo Store aperto su `dataDir` va chiuso prima.
+    /// I dati locali vengono toccati solo dopo che la copia del backup è risultata integra.
     public static func restore(from src: URL, dataDir: URL) throws {
         let fm = FileManager.default
         let db = src.appendingPathComponent("trove.sqlite")
         guard fm.fileExists(atPath: db.path) else { throw BackupError.backupMissing }
-        for ext in ["", "-wal", "-shm"] { try? fm.removeItem(at: dataDir.appendingPathComponent("trove.sqlite" + ext)) }
-        try fm.copyItem(at: db, to: dataDir.appendingPathComponent("trove.sqlite"))
-        let localBlobs = dataDir.appendingPathComponent("blobs")
-        try fm.createDirectory(at: localBlobs, withIntermediateDirectories: true)
-        let have = Set((try? fm.contentsOfDirectory(atPath: localBlobs.path)) ?? [])
-        for f in (try? fm.contentsOfDirectory(atPath: src.appendingPathComponent("blobs").path)) ?? [] where !have.contains(f) {
-            try fm.copyItem(at: src.appendingPathComponent("blobs").appendingPathComponent(f), to: localBlobs.appendingPathComponent(f))
+        let staged = dataDir.appendingPathComponent("trove.sqlite.restore")
+        try? fm.removeItem(at: staged)
+        try fm.copyItem(at: db, to: staged)
+        guard Store.isValidDatabase(staged) else { try? fm.removeItem(at: staged); throw BackupError.backupCorrupted }
+        try syncBlobs(from: src.appendingPathComponent("blobs"), to: dataDir.appendingPathComponent("blobs"))
+        for ext in ["-wal", "-shm"] { try? fm.removeItem(at: dataDir.appendingPathComponent("trove.sqlite" + ext)) }
+        let live = dataDir.appendingPathComponent("trove.sqlite")
+        if fm.fileExists(atPath: live.path) { _ = try fm.replaceItemAt(live, withItemAt: staged) } else { try fm.moveItem(at: staged, to: live) }
+    }
+
+    /// Copia i blob mancanti o di dimensione diversa (copia interrotta), via file temporaneo + rename.
+    static func syncBlobs(from src: URL, to dst: URL) throws {
+        let fm = FileManager.default
+        try fm.createDirectory(at: dst, withIntermediateDirectories: true)
+        func size(_ u: URL) -> Int? { (try? fm.attributesOfItem(atPath: u.path))?[.size] as? Int }
+        for f in (try? fm.contentsOfDirectory(atPath: src.path)) ?? [] where !f.hasSuffix(".part") {
+            let from = src.appendingPathComponent(f), to = dst.appendingPathComponent(f)
+            guard size(from) != size(to) else { continue }
+            let part = dst.appendingPathComponent(f + ".part")
+            try? fm.removeItem(at: part)
+            try fm.copyItem(at: from, to: part)
+            try? fm.removeItem(at: to)
+            try fm.moveItem(at: part, to: to)
         }
     }
 }

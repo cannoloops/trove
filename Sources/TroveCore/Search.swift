@@ -54,6 +54,7 @@ public enum Search {
                 && (q.app.map { (it.sourceApp ?? "").localizedCaseInsensitiveContains($0) } ?? true)
                 && (q.since.map { it.createdAt >= $0 } ?? true)
         }
+        if Task.isCancelled { return [] }
         let text = q.text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return Array(items.sorted { $0.createdAt > $1.createdAt }.prefix(limit)) }
 
@@ -66,7 +67,8 @@ public enum Search {
         let qvec = Embedder.embed(text)
 
         var scored: [(ClipItem, Double)] = []
-        for it in items {
+        for (n, it) in items.enumerated() {
+            if n % 256 == 0, Task.isCancelled { return [] } // una nuova digitazione ha superato questa ricerca
             var s = 0.0
             if fts.contains(it.id) { s += 1 }
             s += fuzzyScore(tokens, words(it)) * 0.8

@@ -56,9 +56,8 @@ final class AppModel: ObservableObject {
         let corpus = corpus, store = store
         searchTask?.cancel()
         searchTask = Task { [weak self] in
-            let r = await Task.detached(priority: .userInitiated) {
-                Search.run(q, store: store, corpus: corpus, expansions: expansions ?? [], limit: 2000)
-            }.value
+            // funzione nonisolated: gira fuori dal main thread ma eredita la cancellazione di questo task
+            let r = await Self.search(q, store: store, corpus: corpus, expansions: expansions ?? [])
             guard !Task.isCancelled, let self else { return }
             do {
                 let keep = self.selected?.id
@@ -72,6 +71,31 @@ final class AppModel: ObservableObject {
     }
 
     /// Dopo una pausa nella digitazione chiede al modello on-device sinonimi it/en e rilancia la ricerca.
+    nonisolated private static func search(_ q: Query, store: Store, corpus: [ClipItem], expansions: [String]) async -> [ClipItem] {
+        Search.run(q, store: store, corpus: corpus, expansions: expansions, limit: 2000)
+    }
+
+    /// Aggiorna un solo elemento nel corpus (dopo l'arricchimento) senza rileggere tutto il DB.
+    func refresh(_ id: Int64) {
+        let store = store
+        Task {
+            guard var it = await Task.detached(priority: .utility, operation: { store.get(id) }).value else { return }
+            it.rtf = nil; it.html = nil // il corpus resta leggero
+            if let i = corpus.firstIndex(where: { $0.id == id }) { corpus[i] = it } else { corpus.insert(it, at: 0) }
+            if !query.isEmpty || kindFilter != nil { runSearch(expansions: nil) }
+            else if let i = results.firstIndex(where: { $0.id == id }) { results[i] = it }
+        }
+    }
+
+    func delete(_ item: ClipItem) {
+        let store = store
+        Task.detached(priority: .userInitiated) { store.delete(item.id) }
+        corpus.removeAll { $0.id == item.id }
+        results.removeAll { $0.id == item.id }
+        totalCount = corpus.count
+        selection = min(selection, max(0, results.count - 1))
+    }
+
     private func scheduleSemantic(_ text: String) {
         semanticTask?.cancel()
         semanticActive = false
@@ -88,14 +112,6 @@ final class AppModel: ObservableObject {
     func move(_ delta: Int) {
         guard !results.isEmpty else { return }
         selection = max(0, min(results.count - 1, selection + delta))
-    }
-
-    func delete(_ item: ClipItem) {
-        store.delete(item.id)
-        corpus.removeAll { $0.id == item.id }
-        results.removeAll { $0.id == item.id }
-        totalCount = corpus.count
-        selection = min(selection, max(0, results.count - 1))
     }
 
     func resetForOpen() {

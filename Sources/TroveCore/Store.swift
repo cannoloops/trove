@@ -118,7 +118,19 @@ public final class Store: @unchecked Sendable {
         query("SELECT \(Self.cols) FROM items ORDER BY created DESC LIMIT ? OFFSET ?", Int64(limit), Int64(offset))
     }
 
-    public func all() -> [ClipItem] { query("SELECT \(Self.cols) FROM items ORDER BY created DESC") }
+    /// Elementi mai arricchiti (niente tag né embedding), dal più recente.
+    public func pendingEnrichmentIds() -> [Int64] {
+        lock.withLock {
+            guard let st = try? prepare("SELECT id FROM items WHERE emb IS NULL AND tags IS NULL ORDER BY created DESC") else { return [] }
+            defer { sqlite3_finalize(st) }
+            var ids: [Int64] = []
+            while sqlite3_step(st) == SQLITE_ROW { ids.append(sqlite3_column_int64(st, 0)) }
+            return ids
+        }
+    }
+
+    /// Corpus per la ricerca: senza rtf/html (pesanti); `get` li restituisce per anteprima e incolla.
+    public func all() -> [ClipItem] { query("SELECT \(Self.lightCols) FROM items ORDER BY created DESC") }
 
     public func items(ids: [Int64]) -> [ClipItem] {
         guard !ids.isEmpty else { return [] }
@@ -157,17 +169,34 @@ public final class Store: @unchecked Sendable {
     /// Copia consistente del DB (anche con WAL attivo).
     public func vacuum(into url: URL) throws {
         try? FileManager.default.removeItem(at: url)
-        try lock.withLock {
-            let st = try prepare("VACUUM INTO ?")
-            defer { sqlite3_finalize(st) }
-            bind(st, 1, url.path)
-            guard sqlite3_step(st) == SQLITE_DONE else { throw StoreError.sqlite(String(cString: sqlite3_errmsg(db))) }
+        var ro: OpaquePointer?
+        defer { sqlite3_close(ro) }
+        guard sqlite3_open_v2(dbURL.path, &ro, SQLITE_OPEN_READONLY, nil) == SQLITE_OK else {
+            throw StoreError.sqlite(String(cString: sqlite3_errmsg(ro)))
         }
+        var st: OpaquePointer?
+        guard sqlite3_prepare_v2(ro, "VACUUM INTO ?", -1, &st, nil) == SQLITE_OK else { throw StoreError.sqlite(String(cString: sqlite3_errmsg(ro))) }
+        defer { sqlite3_finalize(st) }
+        sqlite3_bind_text(st, 1, url.path, -1, SQLITE_TRANSIENT)
+        guard sqlite3_step(st) == SQLITE_DONE else { throw StoreError.sqlite(String(cString: sqlite3_errmsg(ro))) }
+    }
+
+    /// true se `url` è un database SQLite integro.
+    public static func isValidDatabase(_ url: URL) -> Bool {
+        var db: OpaquePointer?
+        defer { sqlite3_close(db) }
+        guard sqlite3_open_v2(url.path, &db, SQLITE_OPEN_READONLY, nil) == SQLITE_OK else { return false }
+        var st: OpaquePointer?
+        guard sqlite3_prepare_v2(db, "PRAGMA quick_check", -1, &st, nil) == SQLITE_OK else { return false }
+        defer { sqlite3_finalize(st) }
+        guard sqlite3_step(st) == SQLITE_ROW, let r = sqlite3_column_text(st, 0) else { return false }
+        return String(cString: r) == "ok"
     }
 
     // MARK: private
 
     private static let cols = "id,kind,text,rtf,html,blob,files,app,bundle,created,hash,ocr,title,emb,lang,tags"
+    private static let lightCols = "id,kind,text,NULL,NULL,blob,files,app,bundle,created,hash,ocr,title,emb,lang,tags"
 
     private func reindex(_ id: Int64) {
         run("DELETE FROM fts WHERE rowid=?", id)

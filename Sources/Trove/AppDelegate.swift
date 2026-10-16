@@ -50,8 +50,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if !Paster.isTrusted { Paster.promptForAccessibility() }
 
         // arricchisce ciò che non lo è ancora (es. dopo un ripristino o un aggiornamento)
-        let pending = store.all().filter { $0.embedding == nil && $0.tags == nil }.map(\.id)
-        enrich(pending)
+        let store = store!
+        Task {
+            let pending = await Task.detached(priority: .utility) { store.pendingEnrichmentIds() }.value
+            enrich(pending)
+        }
 
         Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.backupIfDue() }
@@ -62,20 +65,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: azioni
 
     private func paste(_ item: ClipItem, plain: Bool) {
-        Paster.write(item, plain: plain, store: store)
+        Paster.write(store.get(item.id) ?? item, plain: plain, store: store)
         monitor.skipCurrent()
-        store.touch(item.id)
+        touch(item.id)
         panel.hide()
-        model.reload()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { Paster.sendPaste() }
     }
 
     private func copy(_ item: ClipItem) {
-        Paster.write(item, plain: false, store: store)
+        Paster.write(store.get(item.id) ?? item, plain: false, store: store)
         monitor.skipCurrent()
-        store.touch(item.id)
+        touch(item.id)
         panel.hide()
-        model.reload()
+    }
+
+    private func touch(_ id: Int64) {
+        let store = store!
+        Task {
+            await Task.detached(priority: .userInitiated) { store.touch(id) }.value
+            model.reload()
+        }
     }
 
     /// Coda seriale: OCR, titolo link, tag semantici ed embedding uno alla volta, in background.
@@ -88,7 +97,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 await Task.detached(priority: .utility) {
                     if let item = store.get(id) { await Enricher.enrich(item, store: store) }
                 }.value
-                self?.model.reload()
+                self?.model.refresh(id)
             }
         }
     }
@@ -124,16 +133,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         store.close()
         do {
             try Backup.restore(from: src, dataDir: Self.dataDir)
+            relaunch()
         } catch {
-            settings.backupStatus = "Ripristino non riuscito: \(error.localizedDescription)"
+            // i dati locali non sono stati toccati: si riapre lo stesso DB
+            let msg = error as? BackupError == .backupCorrupted
+                ? "Il backup su Drive non è leggibile (forse non ancora scaricato): la history locale è intatta."
+                : "Ripristino non riuscito: \(error.localizedDescription). La history locale è intatta."
+            let a = NSAlert()
+            a.messageText = "Ripristino non riuscito"
+            a.informativeText = msg
+            NSApp.activate()
+            a.runModal()
+            relaunch() // riapre l'app sullo store locale intatto
         }
-        relaunch()
     }
 
     private func relaunch() {
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/bin/sh")
-        p.arguments = ["-c", "sleep 1; /usr/bin/open \"\(Bundle.main.bundlePath)\""]
+        // aspetta che questo processo sia davvero terminato prima di riaprire l'app
+        p.arguments = ["-c", "while kill -0 \(ProcessInfo.processInfo.processIdentifier) 2>/dev/null; do sleep 0.2; done; /usr/bin/open \"\(Bundle.main.bundlePath)\""]
         try? p.run()
         NSApp.terminate(nil)
     }

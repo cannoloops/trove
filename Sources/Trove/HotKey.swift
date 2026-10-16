@@ -60,9 +60,11 @@ final class HotKey {
     }
 
     private var ref: EventHotKeyRef?
+    private var nextID: UInt32 = 1
     private var handler: EventHandlerRef?
     private let action: () -> Void
 
+    // Il handler Carbon tiene un puntatore non retained: HotKey vive quanto l'app (posseduto da AppDelegate).
     init(action: @escaping () -> Void) {
         self.action = action
         var spec = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
@@ -73,13 +75,17 @@ final class HotKey {
         }, 1, &spec, Unmanaged.passUnretained(self).toOpaque(), &handler)
     }
 
+    /// Registra la nuova combinazione; la vecchia viene rilasciata solo se la nuova è andata a buon fine.
     @discardableResult
     func register(_ combo: Combo) -> Bool {
-        if let ref { UnregisterEventHotKey(ref) }
-        ref = nil
-        let id = EventHotKeyID(signature: OSType(0x54524F56), id: 1) // 'TROV'
-        let status = RegisterEventHotKey(combo.keyCode, combo.modifiers, id, GetApplicationEventTarget(), 0, &ref)
+        var newRef: EventHotKeyRef?
+        let id = EventHotKeyID(signature: OSType(0x54524F56), id: nextID) // 'TROV'
+        nextID += 1
+        let status = RegisterEventHotKey(combo.keyCode, combo.modifiers, id, GetApplicationEventTarget(), 0, &newRef)
         NSLog("Trove hotkey %@ register status %d", combo.display, status)
-        return status == noErr
+        guard status == noErr else { return false }
+        if let ref { UnregisterEventHotKey(ref) }
+        ref = newRef
+        return true
     }
 }
