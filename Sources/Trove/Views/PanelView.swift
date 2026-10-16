@@ -7,10 +7,6 @@ struct PanelActions {
     var settings: () -> Void
 }
 
-extension Color {
-    static let trove = Color(red: 0.91, green: 0.71, blue: 0.29) // oro: selezione e accenti
-}
-
 struct PanelView: View {
     @ObservedObject var model: AppModel
     let actions: PanelActions
@@ -22,37 +18,46 @@ struct PanelView: View {
     ]
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 8) {
             topBar
             if model.results.isEmpty { emptyState } else { strip }
+            hints
         }
         .padding(.horizontal, 16)
         .padding(.top, 12)
-        .padding(.bottom, 14)
+        .padding(.bottom, 8)
+        .background(Color.ink.opacity(0.55))
+        .environment(\.colorScheme, .dark)
         .onChange(of: model.openToken) { searchFocused = true }
         .onAppear { searchFocused = true }
     }
 
     private var topBar: some View {
         HStack(spacing: 12) {
+            Text("trove").font(.system(size: 17, weight: .heavy, design: .rounded)).foregroundStyle(Color.trove)
+                .accessibilityHidden(true)
             HStack(spacing: 6) {
                 Image(systemName: model.semanticActive ? "sparkle.magnifyingglass" : "magnifyingglass")
                     .foregroundStyle(model.semanticActive ? Color.trove : .secondary)
                     .help(model.semanticActive ? "Risultati anche per significato" : "Cerca")
                 TextField("Cerca nella history — prova type:image, app:Safari, oggi", text: $model.query)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 15))
+                    .font(.system(size: 15, design: .rounded))
                     .focused($searchFocused)
+                if model.semanticActive {
+                    Text("anche per significato").font(.system(size: 11, design: .rounded)).foregroundStyle(Color.trove)
+                }
             }
             .padding(.horizontal, 10).padding(.vertical, 7)
-            .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 9))
+            .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(searchFocused ? Color.trove.opacity(0.6) : .white.opacity(0.08)))
             .frame(maxWidth: 520)
 
             HStack(spacing: 4) {
                 ForEach(filters, id: \.0) { name, kind, icon in
                     let on = model.kindFilter == kind
                     Button { model.kindFilter = kind } label: {
-                        Label(name, systemImage: icon).labelStyle(.titleAndIcon).font(.system(size: 12, weight: on ? .semibold : .regular))
+                        Label(name, systemImage: icon).labelStyle(.titleAndIcon).font(.system(size: 12, weight: on ? .semibold : .regular, design: .rounded))
                             .padding(.horizontal, 9).padding(.vertical, 5)
                             .background(on ? Color.trove.opacity(0.25) : .clear, in: Capsule())
                             .foregroundStyle(on ? Color.trove : .secondary)
@@ -61,8 +66,8 @@ struct PanelView: View {
                 }
             }
             Spacer()
-            Text(model.query.isEmpty && model.kindFilter == nil ? "\(model.totalCount) elementi" : "\(model.results.count) risultati")
-                .font(.system(size: 12)).foregroundStyle(.secondary).monospacedDigit()
+            Text(model.query.isEmpty && model.kindFilter == nil ? (model.totalCount == 1 ? "1 elemento" : "\(model.totalCount) elementi") : (model.results.count == 1 ? "1 risultato" : "\(model.results.count) risultati"))
+                .font(.system(size: 12, design: .rounded)).foregroundStyle(.secondary).monospacedDigit()
             Button(action: actions.settings) { Image(systemName: "gearshape") }
                 .buttonStyle(.plain).foregroundStyle(.secondary).help("Impostazioni (⌘,)")
         }
@@ -71,15 +76,16 @@ struct PanelView: View {
     private var strip: some View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: 14) {
+                LazyHStack(spacing: 12) {
                     ForEach(Array(model.results.enumerated()), id: \.element.id) { i, item in
+                        if model.query.isEmpty, let day = dayLabel(at: i) { DaySeparator(text: day) }
                         CardView(item: item, index: i, selected: i == model.selection, store: model.store)
                             .id(item.id)
                             .onTapGesture(count: 2) { actions.paste(item, false) }
                             .simultaneousGesture(TapGesture().onEnded { model.selection = i })
                             .popover(isPresented: Binding(get: { model.previewing && i == model.selection },
                                                           set: { if !$0 { model.previewing = false } }), arrowEdge: .top) {
-                                PreviewView(item: item, store: model.store)
+                                PreviewView(item: model.store.get(item.id) ?? item, store: model.store)
                             }
                             .contextMenu {
                                 Button("Incolla") { actions.paste(item, false) }
@@ -91,7 +97,7 @@ struct PanelView: View {
                             }
                     }
                 }
-                .padding(.vertical, 6).padding(.horizontal, 4)
+                .padding(.vertical, 10).padding(.horizontal, 4)
             }
             .onChange(of: model.selection) { _, new in
                 guard model.results.indices.contains(new) else { return }
@@ -99,6 +105,29 @@ struct PanelView: View {
             }
             .onChange(of: model.query) { if let f = model.results.first { proxy.scrollTo(f.id, anchor: .leading) } }
         }
+    }
+
+    /// Etichetta del giorno quando cambia rispetto alla card precedente.
+    private func dayLabel(at i: Int) -> String? {
+        let cal = Calendar.current
+        let d = model.results[i].createdAt
+        if i > 0, cal.isDate(d, inSameDayAs: model.results[i - 1].createdAt) { return nil }
+        if cal.isDateInToday(d) { return "Oggi" }
+        if cal.isDateInYesterday(d) { return "Ieri" }
+        return d.formatted(.dateTime.weekday(.wide).day().month(.abbreviated))
+    }
+
+    private var hints: some View {
+        HStack(spacing: 14) {
+            ForEach([("↩", "incolla"), ("⇧↩", "testo semplice"), ("␣", "anteprima"), ("⌘⌫", "elimina"), ("esc", "chiudi")], id: \.0) { k, v in
+                HStack(spacing: 5) { KeyCap(k); Text(v) }
+            }
+            Spacer()
+            if let it = model.selected, let tags = it.tags {
+                Text(tags.split(separator: ",").prefix(5).joined(separator: " ·")).lineLimit(1).foregroundStyle(.tertiary)
+            }
+        }
+        .font(.system(size: 11, design: .rounded)).foregroundStyle(.secondary)
     }
 
     private var emptyState: some View {
@@ -114,5 +143,17 @@ struct PanelView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity)
+    }
+}
+
+struct DaySeparator: View {
+    let text: String
+    var body: some View {
+        Text(text)
+            .font(.system(size: 12, weight: .bold, design: .rounded))
+            .foregroundStyle(Color.trove)
+            .fixedSize()
+            .rotationEffect(.degrees(-90))
+            .frame(width: 18, height: CardView.size.height)
     }
 }

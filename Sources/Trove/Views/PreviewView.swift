@@ -29,5 +29,7 @@ struct PreviewView: View {
         }
         .padding(16)
         .frame(width: 640, height: 460)
+        .background(Color.cardInk)
+        .environment(\.colorScheme, .dark)
     }
 }

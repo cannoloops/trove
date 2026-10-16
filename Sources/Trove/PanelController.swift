@@ -10,7 +10,7 @@ final class KeyPanel: NSPanel {
 
 @MainActor
 final class PanelController: NSObject, NSWindowDelegate {
-    static let height: CGFloat = 340
+    static let height: CGFloat = 352
     let panel: KeyPanel
     private let model: AppModel
     private var keyMonitor: Any?
