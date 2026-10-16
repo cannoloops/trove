@@ -69,3 +69,20 @@ func textItem(_ s: String, kind: ClipKind = .text, app: String? = nil, at: Date 
         #expect(g.title == "T")
     }
 }
+
+@Suite struct StoreLookupTests {
+    @Test func getByHash() throws {
+        let s = try Store(directory: tempDir())
+        let id = try s.insert(textItem("x"))
+        #expect(s.get(byHash: Classifier.hash(Data("x".utf8)))?.id == id)
+        #expect(s.get(byHash: "nope") == nil)
+    }
+
+    @Test func touchMovesToTop() throws {
+        let s = try Store(directory: tempDir())
+        let a = try s.insert(textItem("a", at: Date(timeIntervalSince1970: 1)))
+        try s.insert(textItem("b", at: Date(timeIntervalSince1970: 2)))
+        s.touch(a)
+        #expect(s.recent(limit: 1, offset: 0).first?.id == a)
+    }
+}

@@ -105,6 +105,15 @@ public final class Store: @unchecked Sendable {
 
     public func get(_ id: Int64) -> ClipItem? { query("SELECT \(Self.cols) FROM items WHERE id=?", id).first }
 
+    public func get(byHash h: String) -> ClipItem? {
+        lock.withLock {
+            guard let st = try? prepare("SELECT id FROM items WHERE hash=?") else { return nil }
+            defer { sqlite3_finalize(st) }
+            bind(st, 1, h)
+            return sqlite3_step(st) == SQLITE_ROW ? get(sqlite3_column_int64(st, 0)) : nil
+        }
+    }
+
     public func recent(limit: Int, offset: Int) -> [ClipItem] {
         query("SELECT \(Self.cols) FROM items ORDER BY created DESC LIMIT ? OFFSET ?", Int64(limit), Int64(offset))
     }

@@ -24,14 +24,22 @@ public enum SemanticTagger {
         """, prompt: query)
     }
 
+    /// "topic: art, Canvas, canvas, - brush." → ["art", "canvas", "brush"]
+    static func parse(_ content: String) -> [String] {
+        content.split(whereSeparator: { $0 == "," || $0 == "\n" })
+            .map { part -> String in
+                let p = part.split(separator: ":").last.map(String.init) ?? ""
+                return p.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters)).lowercased()
+            }
+            .filter { !$0.isEmpty && $0.count < 40 }
+            .reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
+    }
+
     private static func ask(instructions: String, prompt: String) async -> [String] {
         guard isAvailable, !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return [] }
         do {
             let r = try await LanguageModelSession(instructions: instructions).respond(to: prompt, options: GenerationOptions(sampling: .greedy))
-            return r.content.split(whereSeparator: { $0 == "," || $0 == "\n" })
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters)).lowercased() }
-                .filter { !$0.isEmpty && $0.count < 40 }
-                .reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
+            return parse(r.content)
         } catch {
             return [] // guardrail o contesto troppo lungo: niente tag, la ricerca testuale resta
         }
