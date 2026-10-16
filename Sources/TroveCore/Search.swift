@@ -58,8 +58,10 @@ public enum Search {
         guard !text.isEmpty else { return Array(items.sorted { $0.createdAt > $1.createdAt }.prefix(limit)) }
 
         let fts = Set(store.ftsSearch(text, limit: 5000))
-        var expanded = Set<Int64>()
-        for term in expansions where term.count >= 3 { expanded.formUnion(store.ftsSearch(term, limit: 500)) }
+        var expanded: [Int64: Int] = [:] // quanti termini di espansione colpiscono ogni elemento
+        for term in Set(expansions) where term.count >= 3 {
+            for id in store.ftsSearch(term, limit: 500) { expanded[id, default: 0] += 1 }
+        }
         let tokens = normalize(text).split(separator: " ").map(String.init)
         let qvec = Embedder.embed(text)
 
@@ -68,7 +70,7 @@ public enum Search {
             var s = 0.0
             if fts.contains(it.id) { s += 1 }
             s += fuzzyScore(tokens, words(it)) * 0.8
-            if expanded.contains(it.id) { s += 0.6 }
+            if let n = expanded[it.id] { s += min(0.9, 0.3 * Double(n)) }
             if let qv = qvec, let e = it.embedding, it.embeddingLang == qv.lang {
                 let c = Double(Embedder.cosine(qv.vec, e))
                 if c >= 0.68 { s += c - 0.6 }
