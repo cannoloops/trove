@@ -1,0 +1,23 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift test
+      - name: dmg + appcast
+        env:
+          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+        run: |
+          KEY=$(mktemp); trap 'rm -f $KEY' EXIT
+          printf '%s' "$SPARKLE_ED_PRIVATE_KEY" > $KEY
+          VERSION=${GITHUB_REF_NAME#v} SPARKLE_KEY_FILE=$KEY ./scripts/release.sh
+      - name: GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" build/release/*.dmg build/release/appcast.xml --generate-notes

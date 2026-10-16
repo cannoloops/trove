@@ -1,0 +1,12 @@
+name: CI
+on:
+  push:
+    branches: [main, trove-v1]
+  pull_request:
+jobs:
+  build:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift test
+      - run: ./scripts/build.sh
