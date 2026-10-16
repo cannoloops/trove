@@ -8,31 +8,39 @@ public enum SemanticTagger {
         return false
     }
 
-    /// Una richiesta per lingua: chiedendo "metà in italiano, metà in inglese" il modello risponde in una sola lingua,
-    /// e tag e query in lingue diverse non si incontrano più.
+    /// Una richiesta per lingua, con l'istruzione scritta nella lingua voluta: chiedendo "metà e metà" (o "English only"
+    /// su un testo italiano) il modello risponde nella lingua del testo, e tag e query in lingue diverse non si incontrano.
+    static let tagIT = """
+    Indicizzi appunti per la ricerca. Rispondi SOLO con 10 parole chiave italiane minuscole separate da virgola: \
+    argomento, sinonimi, professioni, luoghi, oggetti e categoria del testo. Solo parole italiane, anche se il testo è in inglese.
+    """
+    static let tagEN = """
+    Translate the meaning of the text into English, then reply ONLY with 10 comma-separated lowercase English keywords \
+    (topic, synonyms, professions, places, objects, category). Every keyword must be an English word, even if the text is Italian.
+    """
+    static let expandIT = """
+    Sei il motore di ricerca di un'app di appunti. Dato un termine di ricerca, rispondi SOLO con 8 parole italiane minuscole \
+    separate da virgola: sinonimi e parole che comparirebbero in una nota pertinente (oggetti, luoghi, professioni, documenti). \
+    Nessun'altra parola.
+    """
+    static let expandEN = """
+    You are the search engine of a notes app. Given a search term in any language, reply ONLY with 8 lowercase English words \
+    separated by commas: synonyms and words that would appear in a relevant note (objects, places, professions, documents). \
+    No other words.
+    """
+
     public static func keywords(for text: String) async -> [String] {
         let t = String(text.prefix(1500))
-        async let it = ask(instructions: """
-        You index clipboard snippets for search. Reply ONLY with 10 comma-separated lowercase ITALIAN keywords: topic, \
-        synonyms, people/professions, places, objects and category of the text. Italian words only. Never repeat a word.
-        """, prompt: t)
-        async let en = ask(instructions: """
-        You index clipboard snippets for search. Reply ONLY with 10 comma-separated lowercase ENGLISH keywords: topic, \
-        synonyms, people/professions, places, objects and category of the text. English words only. Never repeat a word.
-        """, prompt: t)
-        return unique(await it + en)
+        // in sequenza: il modello on-device rifiuta richieste concorrenti
+        let it = await ask(instructions: tagIT, prompt: t)
+        let en = await ask(instructions: tagEN, prompt: t)
+        return unique(it + en)
     }
 
     public static func expand(query: String) async -> [String] {
-        @Sendable func instr(_ lang: String) -> String {
-            """
-            You expand a search query for a notes app. Reply ONLY with 8 comma-separated lowercase \(lang) words: synonyms, \
-            related professions, places, objects and activities that a matching note might contain. \(lang) words only.
-            """
-        }
-        async let it = ask(instructions: instr("ITALIAN"), prompt: query)
-        async let en = ask(instructions: instr("ENGLISH"), prompt: query)
-        return unique(await it + en)
+        let it = await ask(instructions: expandIT, prompt: query)
+        let en = await ask(instructions: expandEN, prompt: query)
+        return unique(it + en)
     }
 
     private static func unique(_ words: [String]) -> [String] {
@@ -52,11 +60,16 @@ public enum SemanticTagger {
 
     private static func ask(instructions: String, prompt: String) async -> [String] {
         guard isAvailable, !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return [] }
-        do {
-            let r = try await LanguageModelSession(instructions: instructions).respond(to: prompt, options: GenerationOptions(sampling: .greedy))
-            return parse(r.content)
-        } catch {
-            return [] // guardrail o contesto troppo lungo: niente tag, la ricerca testuale resta
+        for attempt in 0..<2 {
+            do {
+                let r = try await LanguageModelSession(instructions: instructions)
+                    .respond(to: prompt, options: GenerationOptions(sampling: .greedy))
+                return parse(r.content)
+            } catch {
+                NSLog("Trove semantic: %@", String(describing: error))
+                if attempt == 0 { try? await Task.sleep(for: .milliseconds(400)) } // modello occupato: un secondo tentativo
+            }
         }
+        return [] // guardrail o contesto troppo lungo: niente tag, la ricerca testuale resta
     }
 }

@@ -52,14 +52,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // arricchisce ciò che non lo è ancora (es. dopo un ripristino o un aggiornamento)
         let store = store!
         Task {
-            // tagsVersion 2: tag generati per lingua (it + en); gli elementi con tag vecchi si rigenerano una volta
-            let retag = UserDefaults.standard.integer(forKey: "tagsVersion") < 2
+            // tagsVersion 4: tag generati per lingua (it + en); gli elementi con tag vecchi si rigenerano una volta
+            let retag = UserDefaults.standard.integer(forKey: "tagsVersion") < 4
             let pending = await Task.detached(priority: .utility) {
                 retag ? store.all().map(\.id) : store.pendingEnrichmentIds()
             }.value
             enrich(pending)
             await enrichQueue?.value
-            if retag { UserDefaults.standard.set(2, forKey: "tagsVersion") } // solo a lavoro finito: un riavvio a metà riprende
+            if retag { UserDefaults.standard.set(4, forKey: "tagsVersion") } // solo a lavoro finito: un riavvio a metà riprende
         }
 
         Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { [weak self] _ in
