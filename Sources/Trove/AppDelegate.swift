@@ -57,8 +57,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let pending = await Task.detached(priority: .utility) {
                 retag ? store.all().map(\.id) : store.pendingEnrichmentIds()
             }.value
-            UserDefaults.standard.set(2, forKey: "tagsVersion")
             enrich(pending)
+            await enrichQueue?.value
+            if retag { UserDefaults.standard.set(2, forKey: "tagsVersion") } // solo a lavoro finito: un riavvio a metà riprende
         }
 
         Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { [weak self] _ in
