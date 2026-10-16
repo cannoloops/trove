@@ -69,6 +69,8 @@ enum Snapshot {
             rtf: try! rich.data(from: NSRange(location: 0, length: rich.length), documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]))
         add(.file, "Contratto.pdf\nPreventivo.xlsx", app: "Finder", bundle: "com.apple.finder", ago: 100000,
             files: ["/System/Library/CoreServices/Finder.app", "/Applications/Safari.app"])
+        add(.text, "\u{1B}[32m⏺\u{1B}[0m Ho aggiornato Store.swift e aggiunto i test per il ripristino: ora la history locale resta intatta anche se il   \n  backup è corrotto.   \n  ⎿  Updated Sources/TroveCore/Store.swift", app: "Terminal", bundle: "com.apple.Terminal", ago: 60)
+        add(.text, "OPENAI_API_KEY=sk-proj-abcDEF1234567890abcdef1234567890XYZ\nDATABASE_URL=postgres://admin:s3cr3t@db.local/app", app: "Visual Studio Code", bundle: "com.microsoft.VSCode", ago: 120)
         add(.text, "git commit -m \"fix: ripristino sicuro\" && git push origin trove-v1", app: "Terminal", bundle: "com.apple.Terminal", ago: 200000)
     }
 }

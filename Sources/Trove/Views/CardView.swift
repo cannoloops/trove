@@ -53,6 +53,9 @@ struct CardView: View {
             }
             .lineLimit(1)
             Spacer(minLength: 4)
+            let f = Flags.of(item)
+            if f.secret { Image(systemName: "lock.fill").foregroundStyle(Color.trove).help("Contiene segreti: ⌥↩ li sostituisce con segnaposto") }
+            if f.dirty { Image(systemName: "wand.and.sparkles").foregroundStyle(Color.trove).help("Testo da terminale: ⌥↩ lo incolla pulito") }
             Text(detail).font(Theme.ui(10)).foregroundStyle(.secondary).lineLimit(1).monospacedDigit()
         }
         .padding(.horizontal, 10).padding(.vertical, 7)
@@ -69,6 +72,19 @@ struct CardView: View {
             CodeStyle.language(of: item.text).map { _ in "\(item.text.split(separator: "\n", omittingEmptySubsequences: false).count) righe" }
                 ?? "\(item.text.count) car."
         }
+    }
+}
+
+/// Segreti e testo "sporco" da terminale, calcolati una volta per elemento.
+enum Flags {
+    nonisolated(unsafe) private static var cache: [Int64: (secret: Bool, dirty: Bool)] = [:]
+
+    static func of(_ it: ClipItem) -> (secret: Bool, dirty: Bool) {
+        guard [.text, .richText, .link].contains(it.kind) else { return (false, false) }
+        if let c = cache[it.id] { return c }
+        let c = (Secrets.contains(it.text), Cleaner.needsCleaning(String(it.text.prefix(20000))))
+        cache[it.id] = c
+        return c
     }
 }
 
@@ -89,6 +105,15 @@ struct ItemBody: View {
     let store: Store
     let compact: Bool
 
+    /// Nella card: testo da terminale già pulito e segreti mascherati. L'anteprima mostra l'originale.
+    private var shown: String {
+        guard compact else { return item.text }
+        let f = Flags.of(item)
+        var t = f.dirty ? Cleaner.clean(String(item.text.prefix(4000))) : item.text
+        if f.secret { t = Secrets.redact(String(t.prefix(4000))).text }
+        return t
+    }
+
     var body: some View {
         switch item.kind {
         case .image: image
@@ -97,7 +122,7 @@ struct ItemBody: View {
         case .file: files
         case .richText: richText
         case .text:
-            if let lang = CodeStyle.language(of: item.text) { code(lang) } else { prose(Text(String(item.text.prefix(compact ? 500 : 20000)))) }
+            if let lang = CodeStyle.language(of: shown) { code(lang) } else { prose(Text(String(shown.prefix(compact ? 500 : 20000)))) }
         }
     }
 
@@ -172,7 +197,7 @@ struct ItemBody: View {
     /// Prosa in serif: la prima riga fa da titolo.
     @ViewBuilder private func prose(_ t: Text, styled: Bool = false) -> some View {
         if compact {
-            let lines = item.text.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: true)
+            let lines = shown.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: true)
             VStack(alignment: .leading, spacing: 6) {
                 if !styled, let first = lines.first {
                     Text(first).font(Theme.prose(14, .medium)).foregroundStyle(Color.paper).lineLimit(6)
@@ -190,7 +215,7 @@ struct ItemBody: View {
 
     /// Codice come in un editor: numeri di riga, linguaggio, evidenziazione leggera.
     private func code(_ lang: String) -> some View {
-        let lines = item.text.split(separator: "\n", omittingEmptySubsequences: false).prefix(compact ? 11 : 400)
+        let lines = shown.split(separator: "\n", omittingEmptySubsequences: false).prefix(compact ? 11 : 400)
         return VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text(lang).font(Theme.ui(10, .bold)).foregroundStyle(Color.ink)

@@ -29,6 +29,17 @@ import Testing
         let py = "def f(x):\n    if x:\n        return 1\n    return 0"
         #expect(Cleaner.clean(py) == py)
     }
+    @Test func unwrapsClaudeCodeBulletParagraph() {
+        let raw = "\u{1B}[32m⏺\u{1B}[0m Ho aggiornato Store.swift e aggiunto i test per il ripristino: ora la history locale resta intatta anche se il   \n  backup è corrotto.   \n  ⎿  Updated Sources/TroveCore/Store.swift"
+        #expect(Cleaner.clean(raw) == "Ho aggiornato Store.swift e aggiunto i test per il ripristino: ora la history locale resta intatta anche se il backup è corrotto.\nUpdated Sources/TroveCore/Store.swift")
+    }
+
+    @Test func doesNotJoinConfigLines() {
+        let env = "OPENAI_API_KEY=sk-proj-abcDEF1234567890abcdef1234567890XYZ\nDATABASE_URL=postgres://admin:s3cr3t@db.local/app"
+        #expect(Cleaner.clean(env) == env)
+        #expect(!Cleaner.needsCleaning(env))
+    }
+
     @Test func cleanTextIsUnchanged() {
         #expect(!Cleaner.needsCleaning("Ciao, a domani."))
         #expect(Cleaner.needsCleaning("\u{1B}[1mbold\u{1B}[0m"))

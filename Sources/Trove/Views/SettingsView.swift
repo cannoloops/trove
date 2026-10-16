@@ -13,6 +13,7 @@ final class SettingsModel: ObservableObject {
     @Published var autoBackup = UserDefaults.standard.object(forKey: "autoBackup") as? Bool ?? true {
         didSet { UserDefaults.standard.set(autoBackup, forKey: "autoBackup") }
     }
+    @Published var redactForAI = Paster.redactForAI { didSet { UserDefaults.standard.set(redactForAI, forKey: "redactForAI") } }
     @Published var backupStatus: String?
     @Published var lastBackup: Date?
     @Published var trusted = Paster.isTrusted
@@ -88,6 +89,11 @@ struct SettingsView: View {
                         }
                     }
                 }
+            }
+            Section("AI e agenti") {
+                Toggle("Nascondi i segreti quando incolli in app AI e terminali", isOn: $s.redactForAI)
+                Text("Chiavi API, token, password, carte e IBAN diventano segnaposto come <OPENAI_KEY_1>. ⌥↩ incolla sempre la versione pulita e senza segreti; le immagini incollate in un terminale diventano il percorso del file.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
             Section("Backup su Google Drive") {
                 if let f = s.driveFolder {

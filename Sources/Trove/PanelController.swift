@@ -14,7 +14,7 @@ final class PanelController: NSObject, NSWindowDelegate {
     let panel: KeyPanel
     private let model: AppModel
     private var keyMonitor: Any?
-    var onPaste: (ClipItem, Bool) -> Void = { _, _ in }
+    var onPaste: (ClipItem, PasteMode) -> Void = { _, _ in }
     var onCopy: (ClipItem) -> Void = { _ in }
     var onSettings: () -> Void = {}
 
@@ -106,7 +106,7 @@ final class PanelController: NSObject, NSWindowDelegate {
         case 123: model.move(-1); return true // ←
         case 124: model.move(1); return true // →
         case 36, 76: // ↩
-            if let it = model.selected { onPaste(it, f.contains(.shift)) }
+            if let it = model.selected { onPaste(it, f.contains(.option) ? .agent : f.contains(.shift) ? .plain : .normal) }
             return true
         case 49 where model.query.isEmpty || model.previewing: // spazio
             model.previewing.toggle(); return true
@@ -116,7 +116,7 @@ final class PanelController: NSObject, NSWindowDelegate {
         default: break
         }
         if f.contains(.command), let c = e.charactersIgnoringModifiers {
-            if let n = Int(c), (1...9).contains(n), model.results.count >= n { onPaste(model.results[n - 1], f.contains(.shift)); return true }
+            if let n = Int(c), (1...9).contains(n), model.results.count >= n { onPaste(model.results[n - 1], f.contains(.shift) ? .plain : .normal); return true }
             if c == "c", let it = model.selected, !(panel.firstResponder is NSTextView && hasTextSelection) { onCopy(it); return true }
             if c == "," { onSettings(); return true }
         }

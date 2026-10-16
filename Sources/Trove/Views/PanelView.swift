@@ -2,7 +2,7 @@ import SwiftUI
 import TroveCore
 
 struct PanelActions {
-    var paste: (ClipItem, Bool) -> Void
+    var paste: (ClipItem, PasteMode) -> Void
     var copy: (ClipItem) -> Void
     var settings: () -> Void
 }
@@ -81,15 +81,16 @@ struct PanelView: View {
                         if model.query.isEmpty, let day = dayLabel(at: i) { DaySeparator(text: day) }
                         CardView(item: item, index: i, selected: i == model.selection, store: model.store)
                             .id(item.id)
-                            .onTapGesture(count: 2) { actions.paste(item, false) }
+                            .onTapGesture(count: 2) { actions.paste(item, .normal) }
                             .simultaneousGesture(TapGesture().onEnded { model.selection = i })
                             .popover(isPresented: Binding(get: { model.previewing && i == model.selection },
                                                           set: { if !$0 { model.previewing = false } }), arrowEdge: .top) {
                                 PreviewView(item: model.store.get(item.id) ?? item, store: model.store)
                             }
                             .contextMenu {
-                                Button("Incolla") { actions.paste(item, false) }
-                                Button("Incolla come testo semplice") { actions.paste(item, true) }
+                                Button("Incolla") { actions.paste(item, .normal) }
+                                Button("Incolla come testo semplice") { actions.paste(item, .plain) }
+                                Button("Incolla per agenti (pulito, senza segreti)") { actions.paste(item, .agent) }
                                 Button("Copia") { actions.copy(item) }
                                 Button("Anteprima") { model.selection = i; model.previewing = true }
                                 Divider()
@@ -119,7 +120,7 @@ struct PanelView: View {
 
     private var hints: some View {
         HStack(spacing: 14) {
-            ForEach([("↩", "incolla"), ("⇧↩", "testo semplice"), ("␣", "anteprima"), ("⌘⌫", "elimina"), ("esc", "chiudi")], id: \.0) { k, v in
+            ForEach([("↩", "incolla"), ("⇧↩", "testo semplice"), ("⌥↩", "per agenti"), ("␣", "anteprima"), ("⌘⌫", "elimina"), ("esc", "chiudi")], id: \.0) { k, v in
                 HStack(spacing: 5) { KeyCap(k); Text(v) }
             }
             Spacer()

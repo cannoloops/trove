@@ -25,7 +25,7 @@ struct PreviewView: View {
             if let tags = item.tags {
                 Text(tags).font(.caption).foregroundStyle(.tertiary).lineLimit(2)
             }
-            Text("↩ incolla   ⇧↩ incolla come testo semplice   esc chiudi").font(.caption).foregroundStyle(.secondary)
+            Text("↩ incolla   ⇧↩ testo semplice   ⌥↩ per agenti (pulito, senza segreti)   esc chiudi").font(.caption).foregroundStyle(.secondary)
         }
         .padding(16)
         .frame(width: 640, height: 460)

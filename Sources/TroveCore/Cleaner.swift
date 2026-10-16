@@ -9,18 +9,29 @@ public enum Cleaner {
         var s = raw.replacingOccurrences(of: "\r\n", with: "\n")
         for p in ansiPatterns { s = s.replacingOccurrences(of: p, with: "", options: .regularExpression) }
         var lines: [String] = []
+        var tuiEvidence = false // simboli o padding del TUI: il testo è stato impaginato dal terminale
+        var hang = 0            // rientro delle righe di continuazione sotto un simbolo ⏺/⎿
         for var line in s.components(separatedBy: "\n") {
             let t = line.trimmingCharacters(in: .whitespaces)
             if !t.isEmpty, t.allSatisfy(boxChars.contains) { continue } // bordo della cornice
             line = line.replacingOccurrences(of: #"^\s*[│┃║]\s?"#, with: "", options: .regularExpression)
                 .replacingOccurrences(of: #"\s*[│┃║]\s*$"#, with: "", options: .regularExpression)
-            if let r = line.range(of: #"^\s*[⏺⎿●✻⏵]\s*"#, options: .regularExpression) { line.removeSubrange(r) }
+            if let r = line.range(of: #"^\s*[⏺⎿●✻⏵]\s*"#, options: .regularExpression) {
+                hang = line.distance(from: line.startIndex, to: r.upperBound)
+                line.removeSubrange(r)
+                tuiEvidence = true
+            } else if hang > 0, line.hasPrefix(String(repeating: " ", count: hang)) {
+                line.removeFirst(hang)
+            } else if !line.hasPrefix(" ") {
+                hang = 0
+            }
+            if line.range(of: #"\S {2,}$"#, options: .regularExpression) != nil { tuiEvidence = true }
             lines.append(line.replacingOccurrences(of: #"\s+$"#, with: "", options: .regularExpression))
         }
         while lines.first?.isEmpty == true { lines.removeFirst() }
         while lines.last?.isEmpty == true { lines.removeLast() }
         lines = dedent(lines)
-        return unwrap(lines).joined(separator: "\n")
+        return unwrap(lines, evidence: tuiEvidence).joined(separator: "\n")
     }
 
     static let ansiPatterns = [
@@ -38,11 +49,12 @@ public enum Cleaner {
 
     /// Riunisce le righe spezzate dal terminale: servono almeno due righe "piene" (prova di wrap)
     /// e non si toccano codice indentato, fence, liste, righe con `\` finale o che chiudono una frase.
-    static func unwrap(_ lines: [String]) -> [String] {
+    static func unwrap(_ lines: [String], evidence: Bool) -> [String] {
         let width = lines.map(\.count).max() ?? 0
         guard width >= 40 else { return lines }
-        let full = { (l: String) in l.count >= width - 15 }
-        guard lines.filter(full).count >= 2 else { return lines }
+        // solo prosa: il TUI va a capo sugli spazi, quindi una riga spezzata contiene parole
+        let full = { (l: String) in l.count >= width - 15 && l.contains(" ") }
+        guard lines.filter(full).count >= (evidence ? 1 : 2) else { return lines }
         var out: [String] = []
         var inFence = false
         for line in lines {

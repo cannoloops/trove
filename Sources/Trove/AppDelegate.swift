@@ -35,7 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         monitor.start()
 
         panel = PanelController(model: model)
-        panel.onPaste = { [weak self] in self?.paste($0, plain: $1) }
+        panel.onPaste = { [weak self] in self?.paste($0, mode: $1) }
         panel.onCopy = { [weak self] in self?.copy($0) }
         panel.onSettings = { [weak self] in self?.openSettings() }
 
@@ -70,8 +70,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: azioni
 
-    private func paste(_ item: ClipItem, plain: Bool) {
-        Paster.write(store.get(item.id) ?? item, plain: plain, store: store)
+    private func paste(_ item: ClipItem, mode: PasteMode) {
+        let target = NSWorkspace.shared.frontmostApplication?.bundleIdentifier // il pannello non attiva Trove
+        Paster.write(store.get(item.id) ?? item, mode: mode, target: target, store: store)
         monitor.skipCurrent()
         touch(item.id)
         panel.hide()
@@ -79,7 +80,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func copy(_ item: ClipItem) {
-        Paster.write(store.get(item.id) ?? item, plain: false, store: store)
+        Paster.write(store.get(item.id) ?? item, mode: .normal, target: nil, store: store)
         monitor.skipCurrent()
         touch(item.id)
         panel.hide()
