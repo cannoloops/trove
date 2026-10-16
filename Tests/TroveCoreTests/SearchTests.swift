@@ -76,15 +76,32 @@ import Testing
     func semanticFindsByMeaning() async throws {
         let s = try Store(directory: tempDir())
         for t in ["Ricordati la visita odontoiatrica martedì alle 15", "Ricetta della pizza margherita con mozzarella",
-                  "git push origin main --force", "Meeting with the sales team tomorrow at 10"] {
+                  "git push origin main --force", "Meeting with the sales team tomorrow at 10",
+                  "Bolletta Enel scadenza 12 novembre"] {
             let id = try s.insert(textItem(t))
             await Enricher.enrich(s.get(id)!, store: s)
         }
         for (q, want) in [("dentista", "odontoiatrica"), ("dentist appointment", "odontoiatrica"),
-                          ("riunione commerciale", "sales team"), ("cucina", "pizza")] {
+                          ("riunione commerciale", "sales team"), ("cucina", "pizza"), ("elettricità", "Enel")] {
             let exp = await SemanticTagger.expand(query: q)
             let r = Search.run(Query.parse(q), store: s, expansions: exp)
-            #expect(r.first?.text.contains(want) == true, "\(q) → \(r.map(\.text)) exp=\(exp)")
+            let tags = s.all().first { $0.text.contains(want) }?.tags ?? "-"
+            #expect(r.first?.text.contains(want) == true, "\(q) → \(r.map(\.text)) exp=\(exp) tags=\(tags)")
         }
+    }
+}
+
+@Suite struct SemanticImageTests {
+    @Test(.enabled(if: SemanticTagger.isAvailable))
+    func meaningFindsImageByOCR() async throws {
+        let s = try Store(directory: tempDir())
+        var img = textItem("700×160", kind: .image); img.hash = "img"
+        let id = try s.insert(img)
+        s.update(ocr: "Bolletta Enel scadenza 12 novembre", title: nil, embedding: nil, lang: nil, for: id)
+        await Enricher.enrich(s.get(id)!, store: s)
+        try s.insert(textItem("Ricetta della pizza margherita"))
+        let exp = await SemanticTagger.expand(query: "elettricità")
+        let r = Search.run(Query.parse("elettricità"), store: s, corpus: s.all(), expansions: exp)
+        #expect(r.first?.id == id, "exp=\(exp) tags=\(s.get(id)?.tags ?? "-") r=\(r.map(\.text))")
     }
 }

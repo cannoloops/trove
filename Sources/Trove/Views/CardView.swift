@@ -48,12 +48,12 @@ struct CardView: View {
                 Image(nsImage: icon).resizable().frame(width: 18, height: 18)
             }
             VStack(alignment: .leading, spacing: 0) {
-                Text(item.sourceApp ?? "Sconosciuta").font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundStyle(Color.paper)
-                Text(item.createdAt.formatted(.relative(presentation: .named))).font(.system(size: 10, design: .rounded)).foregroundStyle(.secondary)
+                Text(item.sourceApp ?? "Sconosciuta").font(Theme.ui(11, .semibold)).foregroundStyle(Color.paper)
+                Text(item.createdAt.formatted(.relative(presentation: .named))).font(Theme.ui(10)).foregroundStyle(.secondary)
             }
             .lineLimit(1)
             Spacer(minLength: 4)
-            Text(detail).font(.system(size: 10, design: .rounded)).foregroundStyle(.secondary).lineLimit(1).monospacedDigit()
+            Text(detail).font(Theme.ui(10)).foregroundStyle(.secondary).lineLimit(1).monospacedDigit()
         }
         .padding(.horizontal, 10).padding(.vertical, 7)
         .background(Color.black.opacity(0.22))
@@ -76,7 +76,7 @@ struct KeyCap: View {
     let text: String
     init(_ text: String) { self.text = text }
     var body: some View {
-        Text(text).font(.system(size: 10, weight: .semibold, design: .rounded)).foregroundStyle(Color.paper)
+        Text(text).font(Theme.ui(10, .semibold)).foregroundStyle(Color.paper)
             .padding(.horizontal, 5).padding(.vertical, 2)
             .background(.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 5))
             .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(.white.opacity(0.2)))
@@ -106,7 +106,7 @@ struct ItemBody: View {
             ThumbnailView(url: item.blobPath.map { store.blobsDir.appendingPathComponent($0) }, maxPixel: compact ? 520 : 1600, fill: compact)
             if compact, let ocr = item.ocr, !ocr.isEmpty {
                 Label(ocr.replacingOccurrences(of: "\n", with: " "), systemImage: "text.viewfinder")
-                    .font(.system(size: 10, weight: .medium, design: .rounded)).lineLimit(1)
+                    .font(Theme.ui(10, .medium)).lineLimit(1)
                     .padding(.horizontal, 7).padding(.vertical, 4)
                     .background(.black.opacity(0.6), in: Capsule()).foregroundStyle(Color.paper)
                     .padding(8)
@@ -121,8 +121,8 @@ struct ItemBody: View {
             Color(red: c.r, green: c.g, blue: c.b)
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.text.trimmingCharacters(in: .whitespacesAndNewlines).uppercased())
-                    .font(.system(size: compact ? 24 : 40, weight: .bold, design: .monospaced))
-                Text("rgb \(Int(c.r * 255)) \(Int(c.g * 255)) \(Int(c.b * 255))").font(.system(size: 11, design: .monospaced)).opacity(0.75)
+                    .font(Theme.mono(compact ? 24 : 40, .bold))
+                Text("rgb \(Int(c.r * 255)) \(Int(c.g * 255)) \(Int(c.b * 255))").font(Theme.mono(11)).opacity(0.75)
             }
             .foregroundStyle(light ? Color.black.opacity(0.85) : .white)
             .padding(12)
@@ -133,13 +133,13 @@ struct ItemBody: View {
         let url = URL(string: item.text.trimmingCharacters(in: .whitespacesAndNewlines))
         let host = (url?.host ?? item.text).replacingOccurrences(of: "www.", with: "")
         return VStack(alignment: .leading, spacing: 8) {
-            Text(host).font(.system(size: compact ? 20 : 30, weight: .heavy, design: .rounded)).foregroundStyle(Color.trove)
+            Text(host).font(Theme.ui(compact ? 20 : 30, .heavy)).foregroundStyle(Color.trove)
                 .lineLimit(2).minimumScaleFactor(0.6)
             if let t = item.title {
-                Text(t).font(.system(size: 13, weight: .medium, design: .serif)).foregroundStyle(Color.paper).lineLimit(compact ? 3 : nil)
+                Text(t).font(Theme.prose(13, .medium)).foregroundStyle(Color.paper).lineLimit(compact ? 3 : nil)
             }
             Spacer(minLength: 0)
-            Text(url?.path.isEmpty == false ? url!.path : item.text).font(.system(size: 10, design: .monospaced))
+            Text(url?.path.isEmpty == false ? url!.path : item.text).font(Theme.mono(10))
                 .foregroundStyle(.secondary).lineLimit(compact ? 2 : nil).truncationMode(.middle)
         }
         .padding(12)
@@ -151,8 +151,8 @@ struct ItemBody: View {
                 HStack(spacing: 8) {
                     Image(nsImage: NSWorkspace.shared.icon(forFile: p)).resizable().frame(width: compact ? 34 : 28, height: compact ? 34 : 28)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text((p as NSString).lastPathComponent).font(.system(size: 12, weight: .medium, design: .rounded)).foregroundStyle(Color.paper)
-                        Text((p as NSString).deletingLastPathComponent).font(.system(size: 9.5, design: .monospaced)).foregroundStyle(.secondary)
+                        Text((p as NSString).lastPathComponent).font(Theme.ui(12, .medium)).foregroundStyle(Color.paper)
+                        Text((p as NSString).deletingLastPathComponent).font(Theme.mono(9.5)).foregroundStyle(.secondary)
                     }
                     .lineLimit(1).truncationMode(.middle)
                 }
@@ -175,15 +175,16 @@ struct ItemBody: View {
             let lines = item.text.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: true)
             VStack(alignment: .leading, spacing: 6) {
                 if !styled, let first = lines.first {
-                    Text(first).font(.system(size: 14, weight: .medium, design: .serif)).foregroundStyle(Color.paper).lineLimit(6)
-                    if lines.count > 1 { Text(lines[1]).font(.system(size: 12, design: .serif)).foregroundStyle(.secondary).lineLimit(5) }
+                    Text(first).font(Theme.prose(14, .medium)).foregroundStyle(Color.paper).lineLimit(6)
+                        .padding(.trailing, 26) // spazio per il badge ⌘N
+                    if lines.count > 1 { Text(lines[1]).font(Theme.prose(12)).foregroundStyle(.secondary).lineLimit(5) }
                 } else {
-                    t.font(.system(size: 13, design: .serif)).foregroundStyle(Color.paper).lineLimit(10)
+                    t.font(Theme.prose(13)).foregroundStyle(Color.paper).lineLimit(10)
                 }
             }
             .padding(12)
         } else {
-            ScrollView { t.font(.system(size: 15, design: .serif)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
+            ScrollView { t.font(Theme.prose(15)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
         }
     }
 
@@ -192,7 +193,7 @@ struct ItemBody: View {
         let lines = item.text.split(separator: "\n", omittingEmptySubsequences: false).prefix(compact ? 11 : 400)
         return VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text(lang).font(.system(size: 10, weight: .bold, design: .rounded)).foregroundStyle(Color.ink)
+                Text(lang).font(Theme.ui(10, .bold)).foregroundStyle(Color.ink)
                     .padding(.horizontal, 6).padding(.vertical, 2).background(Color.trove, in: RoundedRectangle(cornerRadius: 4))
                 Spacer()
             }
@@ -206,7 +207,7 @@ struct ItemBody: View {
                         }
                     }
                 }
-                .font(.system(size: compact ? 10.5 : 12.5, design: .monospaced))
+                .font(Theme.mono(compact ? 10.5 : 12.5))
                 .textSelection(.enabled)
             }
         }

@@ -52,7 +52,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // arricchisce ciò che non lo è ancora (es. dopo un ripristino o un aggiornamento)
         let store = store!
         Task {
-            let pending = await Task.detached(priority: .utility) { store.pendingEnrichmentIds() }.value
+            // tagsVersion 2: tag generati per lingua (it + en); gli elementi con tag vecchi si rigenerano una volta
+            let retag = UserDefaults.standard.integer(forKey: "tagsVersion") < 2
+            let pending = await Task.detached(priority: .utility) {
+                retag ? store.all().map(\.id) : store.pendingEnrichmentIds()
+            }.value
+            UserDefaults.standard.set(2, forKey: "tagsVersion")
             enrich(pending)
         }
 

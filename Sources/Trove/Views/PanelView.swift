@@ -34,7 +34,7 @@ struct PanelView: View {
 
     private var topBar: some View {
         HStack(spacing: 12) {
-            Text("trove").font(.system(size: 17, weight: .heavy, design: .rounded)).foregroundStyle(Color.trove)
+            Text("trove").font(Theme.ui(17, .heavy)).foregroundStyle(Color.trove)
                 .accessibilityHidden(true)
             HStack(spacing: 6) {
                 Image(systemName: model.semanticActive ? "sparkle.magnifyingglass" : "magnifyingglass")
@@ -42,10 +42,10 @@ struct PanelView: View {
                     .help(model.semanticActive ? "Risultati anche per significato" : "Cerca")
                 TextField("Cerca nella history — prova type:image, app:Safari, oggi", text: $model.query)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 15, design: .rounded))
+                    .font(Theme.ui(15))
                     .focused($searchFocused)
                 if model.semanticActive {
-                    Text("anche per significato").font(.system(size: 11, design: .rounded)).foregroundStyle(Color.trove)
+                    Text("anche per significato").font(Theme.ui(11)).foregroundStyle(Color.trove)
                 }
             }
             .padding(.horizontal, 10).padding(.vertical, 7)
@@ -57,7 +57,7 @@ struct PanelView: View {
                 ForEach(filters, id: \.0) { name, kind, icon in
                     let on = model.kindFilter == kind
                     Button { model.kindFilter = kind } label: {
-                        Label(name, systemImage: icon).labelStyle(.titleAndIcon).font(.system(size: 12, weight: on ? .semibold : .regular, design: .rounded))
+                        Label(name, systemImage: icon).labelStyle(.titleAndIcon).font(Theme.ui(12, on ? .semibold : .regular))
                             .padding(.horizontal, 9).padding(.vertical, 5)
                             .background(on ? Color.trove.opacity(0.25) : .clear, in: Capsule())
                             .foregroundStyle(on ? Color.trove : .secondary)
@@ -67,7 +67,7 @@ struct PanelView: View {
             }
             Spacer()
             Text(model.query.isEmpty && model.kindFilter == nil ? (model.totalCount == 1 ? "1 elemento" : "\(model.totalCount) elementi") : (model.results.count == 1 ? "1 risultato" : "\(model.results.count) risultati"))
-                .font(.system(size: 12, design: .rounded)).foregroundStyle(.secondary).monospacedDigit()
+                .font(Theme.ui(12)).foregroundStyle(.secondary).monospacedDigit()
             Button(action: actions.settings) { Image(systemName: "gearshape") }
                 .buttonStyle(.plain).foregroundStyle(.secondary).help("Impostazioni (⌘,)")
         }
@@ -127,13 +127,13 @@ struct PanelView: View {
                 Text(tags.split(separator: ",").prefix(5).joined(separator: " ·")).lineLimit(1).foregroundStyle(.tertiary)
             }
         }
-        .font(.system(size: 11, design: .rounded)).foregroundStyle(.secondary)
+        .font(Theme.ui(11)).foregroundStyle(.secondary)
     }
 
     private var emptyState: some View {
         VStack(spacing: 6) {
             Spacer()
-            Image(systemName: model.totalCount == 0 ? "clipboard" : "magnifyingglass").font(.system(size: 28)).foregroundStyle(.secondary)
+            Image(systemName: model.totalCount == 0 ? "clipboard" : "magnifyingglass").font(Theme.ui(28)).foregroundStyle(.secondary)
             Text(model.totalCount == 0 ? "Copia qualcosa con ⌘C: comparirà qui." : "Nessun risultato per “\(model.query)”.")
                 .foregroundStyle(.secondary)
             if model.totalCount > 0 {
@@ -150,7 +150,7 @@ struct DaySeparator: View {
     let text: String
     var body: some View {
         Text(text)
-            .font(.system(size: 12, weight: .bold, design: .rounded))
+            .font(Theme.ui(12, .bold))
             .foregroundStyle(Color.trove)
             .fixedSize()
             .rotationEffect(.degrees(-90))

@@ -19,7 +19,7 @@ struct PreviewView: View {
             if let ocr = item.ocr, !ocr.isEmpty {
                 Divider()
                 Text("Testo riconosciuto").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
-                ScrollView { Text(ocr).font(.system(size: 12)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
+                ScrollView { Text(ocr).font(Theme.ui(12)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
                     .frame(maxHeight: 90)
             }
             if let tags = item.tags {
