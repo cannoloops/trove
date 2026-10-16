@@ -29,6 +29,8 @@ public struct ClipItem: Identifiable, Equatable, Sendable {
     public var hash: String
     public var ocr: String?
     public var title: String?
+    /// Parole chiave it/en generate on-device (ricerca per significato).
+    public var tags: String?
     public var embedding: [Float]?
     public var embeddingLang: String?
 
@@ -42,6 +44,6 @@ public struct ClipItem: Identifiable, Equatable, Sendable {
 
     /// Testo su cui cercare: contenuto + OCR + titolo link.
     public var searchableText: String {
-        [text, ocr ?? "", title ?? "", filePaths.joined(separator: " ")].filter { !$0.isEmpty }.joined(separator: "\n")
+        [text, ocr ?? "", title ?? "", tags ?? "", filePaths.joined(separator: " ")].filter { !$0.isEmpty }.joined(separator: "\n")
     }
 }

@@ -24,7 +24,7 @@ public final class Store: @unchecked Sendable {
         CREATE TABLE IF NOT EXISTS items(
           id INTEGER PRIMARY KEY, kind TEXT NOT NULL, text TEXT NOT NULL, rtf BLOB, html TEXT, blob TEXT,
           files TEXT, app TEXT, bundle TEXT, created REAL NOT NULL, hash TEXT NOT NULL UNIQUE,
-          ocr TEXT, title TEXT, emb BLOB, lang TEXT);
+          ocr TEXT, title TEXT, emb BLOB, lang TEXT, tags TEXT);
         CREATE INDEX IF NOT EXISTS items_created ON items(created DESC);
         CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(body, tokenize='trigram');
         """)
@@ -58,15 +58,15 @@ public final class Store: @unchecked Sendable {
         }
     }
 
-    public func update(ocr: String?, title: String?, embedding: [Float]?, lang: String?, for id: Int64) {
+    public func update(ocr: String?, title: String?, tags: String? = nil, embedding: [Float]?, lang: String?, for id: Int64) {
         lock.withLock {
             guard let st = try? prepare("""
-            UPDATE items SET ocr=coalesce(?,ocr), title=coalesce(?,title), emb=coalesce(?,emb), lang=coalesce(?,lang) WHERE id=?
+            UPDATE items SET ocr=coalesce(?,ocr), title=coalesce(?,title), emb=coalesce(?,emb), lang=coalesce(?,lang), tags=coalesce(?,tags) WHERE id=?
             """) else { return }
             defer { sqlite3_finalize(st) }
             bind(st, 1, ocr); bind(st, 2, title)
-            bind(st, 3, embedding.map { $0.withUnsafeBufferPointer { Data(buffer: $0) } }); bind(st, 4, lang)
-            sqlite3_bind_int64(st, 5, id)
+            bind(st, 3, embedding.map { $0.withUnsafeBufferPointer { Data(buffer: $0) } }); bind(st, 4, lang); bind(st, 5, tags)
+            sqlite3_bind_int64(st, 6, id)
             sqlite3_step(st)
             reindex(id)
         }
@@ -158,7 +158,7 @@ public final class Store: @unchecked Sendable {
 
     // MARK: private
 
-    private static let cols = "id,kind,text,rtf,html,blob,files,app,bundle,created,hash,ocr,title,emb,lang"
+    private static let cols = "id,kind,text,rtf,html,blob,files,app,bundle,created,hash,ocr,title,emb,lang,tags"
 
     private func reindex(_ id: Int64) {
         run("DELETE FROM fts WHERE rowid=?", id)
@@ -185,7 +185,7 @@ public final class Store: @unchecked Sendable {
                 it.id = sqlite3_column_int64(st, 0)
                 it.ocr = str(st, 11); it.title = str(st, 12)
                 it.embedding = data(st, 13).map { d in d.withUnsafeBytes { Array($0.bindMemory(to: Float.self)) } }
-                it.embeddingLang = str(st, 14)
+                it.embeddingLang = str(st, 14); it.tags = str(st, 15)
                 out.append(it)
             }
             return out
