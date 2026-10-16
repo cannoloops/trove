@@ -2,15 +2,6 @@ import AppKit
 import SwiftUI
 import TroveCore
 
-extension Color {
-    static let trove = Color(red: 0.91, green: 0.71, blue: 0.29)      // oro: selezione, accenti
-    static let ink = Color(red: 0.07, green: 0.08, blue: 0.11)        // fondo pannello
-    static let cardInk = Color(red: 0.11, green: 0.12, blue: 0.16)    // superficie card
-    static let paper = Color(red: 0.93, green: 0.93, blue: 0.95)      // testo principale
-    static let codeString = Color(red: 0.49, green: 0.80, blue: 0.75)
-    static let codeComment = Color(red: 0.45, green: 0.48, blue: 0.56)
-}
-
 struct CardView: View {
     let item: ClipItem
     let index: Int
@@ -25,17 +16,17 @@ struct CardView: View {
             label
         }
         .frame(width: Self.size.width, height: Self.size.height)
-        .background(Color.cardInk)
-        .overlay(alignment: .top) { AppIcons.tint(for: item.sourceBundle ?? item.sourceApp).frame(height: 3) }
+        .background(Color.cardSurface)
         .overlay(alignment: .topTrailing) {
-            if index < 9 { KeyCap("⌘\(index + 1)").padding(8).opacity(selected ? 1 : 0.0) }
+            if index < 9 { KeyCap("⌘\(index + 1)").padding(8).opacity(selected ? 1 : 0) }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .strokeBorder(selected ? Color.trove : .white.opacity(0.07), lineWidth: selected ? 2.5 : 1))
-        .shadow(color: selected ? Color.trove.opacity(0.35) : .black.opacity(0.25), radius: selected ? 14 : 5, y: selected ? 0 : 3)
-        .offset(y: selected ? -4 : 0)
-        .animation(.spring(duration: 0.18), value: selected)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous).strokeBorder(Color.hairline, lineWidth: 0.5))
+        .shadow(color: .black.opacity(0.12), radius: 3, y: 1)
+        // anello di selezione staccato di 3pt, raggio concentrico alla card
+        .overlay(RoundedRectangle(cornerRadius: Theme.cardRadius + 3, style: .continuous)
+            .strokeBorder(Color.trove, lineWidth: 2).padding(-3).opacity(selected ? 1 : 0))
+        .animation(.easeOut(duration: 0.12), value: selected)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(item.kind.label) da \(item.sourceApp ?? "app sconosciuta"): \(item.title ?? String(item.text.prefix(80)))")
         .accessibilityAddTraits(selected ? .isSelected : [])
@@ -48,18 +39,21 @@ struct CardView: View {
                 Image(nsImage: icon).resizable().frame(width: 18, height: 18)
             }
             VStack(alignment: .leading, spacing: 0) {
-                Text(item.sourceApp ?? "Sconosciuta").font(Theme.ui(11, .semibold)).foregroundStyle(Color.paper)
+                Text(item.sourceApp ?? "Sconosciuta").font(Theme.ui(11, .semibold)).foregroundStyle(.primary)
                 Text(item.createdAt.formatted(.relative(presentation: .named))).font(Theme.ui(10)).foregroundStyle(.secondary)
             }
             .lineLimit(1)
             Spacer(minLength: 4)
             let f = Flags.of(item)
-            if f.secret { Image(systemName: "lock.fill").foregroundStyle(Color.trove).help("Contiene segreti: ⌥↩ li sostituisce con segnaposto") }
-            if f.dirty { Image(systemName: "wand.and.sparkles").foregroundStyle(Color.trove).help("Testo da terminale: ⌥↩ lo incolla pulito") }
+            Group {
+                if f.secret { Image(systemName: "lock.fill").help("Contiene segreti: ⌥↩ li sostituisce con segnaposto") }
+                if f.dirty { Image(systemName: "terminal").help("Testo da terminale: ⌥↩ lo incolla pulito") }
+            }
+            .font(Theme.ui(10, .semibold)).foregroundStyle(.secondary)
             Text(detail).font(Theme.ui(10)).foregroundStyle(.secondary).lineLimit(1).monospacedDigit()
         }
         .padding(.horizontal, 10).padding(.vertical, 7)
-        .background(Color.black.opacity(0.22))
+        .overlay(alignment: .top) { Rectangle().fill(Color.hairline).frame(height: 0.5) }
     }
 
     private var detail: String {
@@ -102,10 +96,10 @@ struct KeyCap: View {
     let text: String
     init(_ text: String) { self.text = text }
     var body: some View {
-        Text(text).font(Theme.ui(10, .semibold)).foregroundStyle(Color.paper)
+        Text(text).font(Theme.ui(10, .medium)).foregroundStyle(.secondary)
             .padding(.horizontal, 5).padding(.vertical, 2)
-            .background(.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 5))
-            .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(.white.opacity(0.2)))
+            .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: Theme.chipRadius, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: Theme.chipRadius, style: .continuous).strokeBorder(Color.hairline, lineWidth: 0.5))
     }
 }
 
@@ -137,7 +131,7 @@ struct ItemBody: View {
                 Label(ocr.replacingOccurrences(of: "\n", with: " "), systemImage: "text.viewfinder")
                     .font(Theme.ui(10, .medium)).lineLimit(1)
                     .padding(.horizontal, 7).padding(.vertical, 4)
-                    .background(.black.opacity(0.6), in: Capsule()).foregroundStyle(Color.paper)
+                    .background(.black.opacity(0.6), in: Capsule()).foregroundStyle(.white)
                     .padding(8)
             }
         }
@@ -162,11 +156,11 @@ struct ItemBody: View {
         let url = URL(string: item.text.trimmingCharacters(in: .whitespacesAndNewlines))
         let host = (url?.host ?? item.text).replacingOccurrences(of: "www.", with: "")
         return VStack(alignment: .leading, spacing: 8) {
-            Text(host).font(Theme.ui(compact ? 20 : 30, .heavy)).foregroundStyle(Color.trove)
-                .lineLimit(2).minimumScaleFactor(0.6)
-            if let t = item.title {
-                Text(t).font(Theme.prose(13, .medium)).foregroundStyle(Color.paper).lineLimit(compact ? 3 : nil)
-            }
+            Label(host, systemImage: "link").font(Theme.ui(compact ? 12 : 14, .semibold)).foregroundStyle(.secondary)
+                .lineLimit(1).truncationMode(.middle)
+            // senza titolo è il dominio a fare da titolo
+            Text(item.title ?? host).font(Theme.prose(compact ? 15 : 20, .semibold)).foregroundStyle(.primary)
+                .lineLimit(compact ? 4 : nil).minimumScaleFactor(0.8)
             Spacer(minLength: 0)
             Text(url?.path.isEmpty == false ? url!.path : item.text).font(Theme.mono(10))
                 .foregroundStyle(.secondary).lineLimit(compact ? 2 : nil).truncationMode(.middle)
@@ -180,7 +174,7 @@ struct ItemBody: View {
                 HStack(spacing: 8) {
                     Image(nsImage: NSWorkspace.shared.icon(forFile: p)).resizable().frame(width: compact ? 34 : 28, height: compact ? 34 : 28)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text((p as NSString).lastPathComponent).font(Theme.ui(12, .medium)).foregroundStyle(Color.paper)
+                        Text((p as NSString).lastPathComponent).font(Theme.ui(12, .medium)).foregroundStyle(.primary)
                         Text((p as NSString).deletingLastPathComponent).font(Theme.mono(9.5)).foregroundStyle(.secondary)
                     }
                     .lineLimit(1).truncationMode(.middle)
@@ -205,11 +199,11 @@ struct ItemBody: View {
             let lines = shown.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: true)
             VStack(alignment: .leading, spacing: 6) {
                 if !styled, let first = lines.first {
-                    Text(first).font(Theme.prose(14, .medium)).foregroundStyle(Color.paper).lineLimit(6)
+                    Text(first).font(Theme.prose(14, .medium)).foregroundStyle(.primary).lineLimit(6)
                         .padding(.trailing, 26) // spazio per il badge ⌘N
                     if lines.count > 1 { Text(lines[1]).font(Theme.prose(12)).foregroundStyle(.secondary).lineLimit(5) }
                 } else {
-                    t.font(Theme.prose(13)).foregroundStyle(Color.paper).lineLimit(10)
+                    t.font(Theme.prose(13)).foregroundStyle(.primary).lineLimit(10)
                 }
             }
             .padding(12)
@@ -223,8 +217,7 @@ struct ItemBody: View {
         let lines = shown.split(separator: "\n", omittingEmptySubsequences: false).prefix(compact ? 11 : 400)
         return VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text(lang).font(Theme.ui(10, .bold)).foregroundStyle(Color.ink)
-                    .padding(.horizontal, 6).padding(.vertical, 2).background(Color.trove, in: RoundedRectangle(cornerRadius: 4))
+                Text(lang).font(Theme.mono(10, .medium)).foregroundStyle(.secondary)
                 Spacer()
             }
             .padding(.bottom, 6)
@@ -232,7 +225,7 @@ struct ItemBody: View {
                 VStack(alignment: .leading, spacing: 1) {
                     ForEach(Array(lines.enumerated()), id: \.offset) { n, line in
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text("\(n + 1)").foregroundStyle(Color.codeComment.opacity(0.7)).frame(width: 16, alignment: .trailing)
+                            Text("\(n + 1)").foregroundStyle(.tertiary).frame(width: 16, alignment: .trailing)
                             Text(CodeStyle.highlight(String(line), lang: lang)).lineLimit(1)
                         }
                     }
@@ -243,7 +236,7 @@ struct ItemBody: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Color.black.opacity(0.25))
+        .background(Color.codeSurface)
     }
 }
 
@@ -285,7 +278,7 @@ enum CodeStyle {
         func flush() {
             guard !token.isEmpty else { return }
             var a = AttributedString(token)
-            a.foregroundColor = keywords.contains(token.lowercased()) && (lang != "sql" || true) ? .trove : .paper
+            a.foregroundColor = keywords.contains(token.lowercased()) ? .codeKeyword : .codeText
             out += a; token = ""
         }
         for ch in s {
@@ -297,7 +290,7 @@ enum CodeStyle {
             } else if ch.isLetter || ch.isNumber || ch == "_" {
                 token.append(ch)
             } else {
-                flush(); var a = AttributedString(String(ch)); a.foregroundColor = Color.paper.opacity(0.75); out += a
+                flush(); var a = AttributedString(String(ch)); a.foregroundColor = Color.codeText.opacity(0.75); out += a
             }
         }
         if inString != nil { var a = AttributedString(token); a.foregroundColor = .codeString; out += a } else { flush() }
@@ -355,12 +348,5 @@ enum AppIcons {
         let i = NSWorkspace.shared.icon(forFile: url.path)
         icons[bundle] = i
         return i
-    }
-
-    /// Colore stabile per app: filo colorato in cima alla card.
-    static func tint(for key: String?) -> Color {
-        guard let key else { return Color(white: 0.4) }
-        let h = key.unicodeScalars.reduce(UInt32(5381)) { ($0 &<< 5) &+ $0 &+ $1.value }
-        return Color(hue: Double(h % 360) / 360, saturation: 0.6, brightness: 0.85)
     }
 }

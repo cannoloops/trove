@@ -13,24 +13,34 @@ enum Snapshot {
         let model = AppModel(store: store)
         RunLoop.main.run(until: Date().addingTimeInterval(1.2))
         let actions = PanelActions(paste: { _, _ in }, copy: { _ in }, settings: {})
-        model.selection = 1
-        save(PanelView(model: model, actions: actions), size: NSSize(width: 1500, height: PanelController.height), to: dir.appendingPathComponent("panel.png"))
-        model.query = "dentista"
-        RunLoop.main.run(until: Date().addingTimeInterval(0.6))
-        save(PanelView(model: model, actions: actions), size: NSSize(width: 1500, height: PanelController.height), to: dir.appendingPathComponent("panel-search.png"))
-        if let it = store.all().first(where: { $0.kind == .image }) {
-            save(PreviewView(item: it, store: store), size: NSSize(width: 640, height: 460), to: dir.appendingPathComponent("preview.png"))
+        for (mode, look) in [("dark", NSAppearance.Name.darkAqua), ("light", .aqua)] {
+            func save(_ view: some View, _ size: NSSize, _ name: String) {
+                Snapshot.save(view, size: size, appearance: look, to: dir.appendingPathComponent("\(name)-\(mode).png"))
+            }
+            model.query = ""
+            model.selection = 1
+            RunLoop.main.run(until: Date().addingTimeInterval(0.6))
+            save(PanelView(model: model, actions: actions), NSSize(width: 1500, height: PanelController.height), "panel")
+            model.query = "dentista"
+            RunLoop.main.run(until: Date().addingTimeInterval(0.6))
+            save(PanelView(model: model, actions: actions), NSSize(width: 1500, height: PanelController.height), "panel-search")
+            model.query = "zzzqqq"
+            RunLoop.main.run(until: Date().addingTimeInterval(0.6))
+            save(PanelView(model: model, actions: actions), NSSize(width: 1500, height: PanelController.height), "panel-empty")
+            if let it = store.all().first(where: { $0.kind == .image }) {
+                save(PreviewView(item: it, store: store), NSSize(width: 640, height: 460), "preview")
+            }
+            save(SettingsView(s: SettingsModel(), app: model), NSSize(width: 560, height: 820), "settings")
         }
-        save(SettingsView(s: SettingsModel(), app: model), size: NSSize(width: 560, height: 700), to: dir.appendingPathComponent("settings.png"))
     }
 
-    static func save(_ view: some View, size: NSSize, to url: URL) {
+    static func save(_ view: some View, size: NSSize, appearance: NSAppearance.Name, to url: URL) {
+        // fondo neutro tipo scrivania: il vetro vero non si renderizza fuori schermo
         let host = NSHostingView(rootView: view.frame(width: size.width, height: size.height)
-            .background(LinearGradient(colors: [Color(red: 0.22, green: 0.30, blue: 0.42), Color(red: 0.45, green: 0.38, blue: 0.48)],
-                                       startPoint: .topLeading, endPoint: .bottomTrailing)))
+            .background(Color(nsColor: .windowBackgroundColor)))
         host.frame = NSRect(origin: .zero, size: size)
         let win = NSWindow(contentRect: host.frame, styleMask: .borderless, backing: .buffered, defer: false)
-        win.appearance = NSAppearance(named: .darkAqua)
+        win.appearance = NSAppearance(named: appearance)
         win.contentView = host
         host.layoutSubtreeIfNeeded()
         RunLoop.main.run(until: Date().addingTimeInterval(0.4))

@@ -13,9 +13,8 @@ enum Toast {
             Text(detail).font(Theme.ui(11)).foregroundStyle(.secondary)
         }
         .padding(.horizontal, 16).padding(.vertical, 11)
-        .background(Color.cardInk, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.trove.opacity(0.4)))
-        .environment(\.colorScheme, .dark)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+        .padding(12) // spazio per l'ombra del vetro
         let host = NSHostingView(rootView: view)
         let size = host.fittingSize
         let p = NSPanel(contentRect: NSRect(origin: .zero, size: size), styleMask: [.nonactivatingPanel, .borderless], backing: .buffered, defer: false)

@@ -32,24 +32,15 @@ final class PanelController: NSObject, NSWindowDelegate {
         panel.hidesOnDeactivate = false
         panel.delegate = self
 
-        let blur = NSVisualEffectView()
-        blur.material = .hudWindow
-        blur.blendingMode = .behindWindow
-        blur.state = .active
-        blur.wantsLayer = true
-        blur.layer?.cornerRadius = 18
-        blur.layer?.masksToBounds = true
+        // Liquid Glass: il pannello è livello di controllo; le card sopra restano superfici piene.
+        let glass = NSGlassEffectView()
+        glass.cornerRadius = Theme.panelRadius
         let host = NSHostingView(rootView: PanelView(model: model, actions: .init(
             paste: { [weak self] in self?.onPaste($0, $1) },
             copy: { [weak self] in self?.onCopy($0) },
             settings: { [weak self] in self?.onSettings() })))
-        host.translatesAutoresizingMaskIntoConstraints = false
-        blur.addSubview(host)
-        NSLayoutConstraint.activate([
-            host.leadingAnchor.constraint(equalTo: blur.leadingAnchor), host.trailingAnchor.constraint(equalTo: blur.trailingAnchor),
-            host.topAnchor.constraint(equalTo: blur.topAnchor), host.bottomAnchor.constraint(equalTo: blur.bottomAnchor),
-        ])
-        panel.contentView = blur
+        glass.contentView = host
+        panel.contentView = glass
     }
 
     var isVisible: Bool { panel.isVisible }
@@ -62,7 +53,8 @@ final class PanelController: NSObject, NSWindowDelegate {
         let vf = screen.visibleFrame
         let target = NSRect(x: vf.minX + 8, y: vf.minY + 8, width: vf.width - 16, height: Self.height)
         model.resetForOpen()
-        panel.setFrame(target.offsetBy(dx: 0, dy: -40), display: false)
+        let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        panel.setFrame(reduceMotion ? target : target.offsetBy(dx: 0, dy: -40), display: false)
         panel.alphaValue = 0
         panel.makeKeyAndOrderFront(nil)
         NSAnimationContext.runAnimationGroup { ctx in

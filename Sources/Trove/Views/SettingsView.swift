@@ -90,14 +90,18 @@ struct SettingsView: View {
                     }
                 }
             }
-            Section("AI e agenti") {
-                Toggle("Nascondi i segreti quando incolli in ChatGPT, Claude, Perplexity e Gemini", isOn: $s.redactForAI)
-                Text("Chiavi API, token, password, carte e IBAN diventano segnaposto come <OPENAI_KEY_1>, con un avviso. Nei terminali ↩ incolla com’è; ⌥↩ incolla ovunque la versione pulita e senza segreti. Le immagini incollate in un terminale diventano il percorso del file.")
+            Section {
+                Toggle("Nascondi i segreti nelle chat AI", isOn: $s.redactForAI)
+            } header: { Text("AI e agenti") } footer: {
+                Text("In ChatGPT, Claude, Perplexity e Gemini chiavi API, token, password, carte e IBAN diventano segnaposto come <OPENAI_KEY_1>, con un avviso. Nei terminali ↩ incolla com’è; ⌥↩ incolla ovunque la versione pulita e senza segreti. Le immagini incollate in un terminale diventano il percorso del file.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section("Backup su Google Drive") {
                 if let f = s.driveFolder {
-                    LabeledContent("Cartella") { Text(f.path).font(.caption).textSelection(.enabled).lineLimit(2) }
+                    LabeledContent("Cartella") {
+                        // ponytail: mostra le ultime due cartelle (es. Il mio Drive › Trove), il percorso intero sta nel tooltip
+                        Text(f.pathComponents.suffix(2).joined(separator: " › ")).foregroundStyle(.secondary).help(f.path)
+                    }
                     Toggle("Backup automatico ogni 24 ore", isOn: $s.autoBackup)
                     LabeledContent("Ultimo backup") {
                         Text(s.lastBackup.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? "mai")
