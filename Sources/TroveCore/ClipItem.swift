@@ -5,12 +5,12 @@ public enum ClipKind: String, CaseIterable, Sendable {
 
     public var label: String {
         switch self {
-        case .text: "Testo"
-        case .richText: "Rich text"
-        case .link: "Link"
-        case .image: "Immagine"
-        case .file: "File"
-        case .color: "Colore"
+        case .text: String(localized: "Testo")
+        case .richText: String(localized: "Rich text")
+        case .link: String(localized: "Link")
+        case .image: String(localized: "Immagine")
+        case .file: String(localized: "File")
+        case .color: String(localized: "Colore")
         }
     }
 }

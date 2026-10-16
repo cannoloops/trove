@@ -27,7 +27,7 @@ struct PreviewView: View {
                 Text(tags).font(.caption).foregroundStyle(.tertiary).lineLimit(2)
             }
             HStack(spacing: 14) {
-                ForEach([("↩", "incolla"), ("⇧↩", "testo semplice"), ("⌥↩", "per agenti, senza segreti"), ("esc", "chiudi")], id: \.0) { k, v in
+                ForEach([("↩", String(localized: "incolla")), ("⇧↩", String(localized: "testo semplice")), ("⌥↩", String(localized: "per agenti, senza segreti")), ("esc", String(localized: "chiudi"))], id: \.0) { k, v in
                     HStack(spacing: 5) { KeyCap(k); Text(v) }
                 }
             }

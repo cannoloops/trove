@@ -30,10 +30,10 @@ final class SettingsModel: ObservableObject {
         do {
             if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
             loginError = nil
-        } catch { loginError = "Non riesco a cambiare l’avvio al login: \(error.localizedDescription)" }
+        } catch { loginError = String(localized: "Non riesco a cambiare l’avvio al login: \(error.localizedDescription)") }
         launchAtLogin = SMAppService.mainApp.status == .enabled
         if on, SMAppService.mainApp.status == .requiresApproval {
-            loginError = "Approva Trove in Impostazioni di Sistema › Generali › Elementi di login."
+            loginError = String(localized: "Approva Trove in Impostazioni di Sistema › Generali › Elementi di login.")
         }
     }
 
@@ -45,8 +45,8 @@ final class SettingsModel: ObservableObject {
         monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] e in
             guard let self else { return e }
             if e.keyCode == 53 { self.stopRecording(); return nil } // esc annulla
-            guard let c = HotKey.Combo(event: e) else { self.hotKeyError = "Usa almeno ⌘, ⌥ o ⌃ insieme a un tasto."; return nil }
-            if self.onCombo(c) { self.combo = c; c.save() } else { self.hotKeyError = "\(c.display) è già usata da un’altra app." }
+            guard let c = HotKey.Combo(event: e) else { self.hotKeyError = String(localized: "Usa almeno ⌘, ⌥ o ⌃ insieme a un tasto."); return nil }
+            if self.onCombo(c) { self.combo = c; c.save() } else { self.hotKeyError = String(localized: "\(c.display) è già usata da un’altra app.") }
             self.stopRecording()
             return nil
         }
@@ -70,7 +70,7 @@ struct SettingsView: View {
             Section("Generale") {
                 LabeledContent("Apri Trove") {
                     HStack {
-                        Button(s.recording ? "Premi la nuova scorciatoia…" : s.combo.display) {
+                        Button(s.recording ? String(localized: "Premi la nuova scorciatoia…") : s.combo.display) {
                             s.recording ? s.stopRecording() : s.startRecording()
                         }
                         .frame(minWidth: 150)
@@ -104,7 +104,7 @@ struct SettingsView: View {
                     }
                     Toggle("Backup automatico ogni 24 ore", isOn: $s.autoBackup)
                     LabeledContent("Ultimo backup") {
-                        Text(s.lastBackup.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? "mai")
+                        Text(s.lastBackup.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? String(localized: "mai"))
                     }
                     HStack {
                         Button("Esegui backup ora", action: s.onBackup)
@@ -119,10 +119,10 @@ struct SettingsView: View {
             Section("History") {
                 LabeledContent("Elementi salvati", value: "\(app.totalCount)")
                 LabeledContent("Ricerca per significato") {
-                    Text(SemanticTagger.isAvailable ? "Attiva (Apple Intelligence on-device)" : "Solo embedding locali: Apple Intelligence non disponibile")
+                    Text(SemanticTagger.isAvailable ? String(localized: "Attiva (Apple Intelligence on-device)") : String(localized: "Solo embedding locali: Apple Intelligence non disponibile"))
                         .foregroundStyle(.secondary)
                 }
-                LabeledContent("Conservazione", value: "Per sempre")
+                LabeledContent("Conservazione", value: String(localized: "Per sempre"))
                 Button("Cancella tutta la history…", role: .destructive) { confirmClear = true }
             }
         }

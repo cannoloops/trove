@@ -14,7 +14,8 @@ struct PanelView: View {
     @Namespace private var filterNS
 
     private let filters: [(String, ClipKind?)] = [
-        ("Tutto", nil), ("Testo", .text), ("Rich", .richText), ("Link", .link), ("Immagini", .image), ("File", .file), ("Colori", .color),
+        (String(localized: "Tutto"), nil), (String(localized: "Testo"), .text), (String(localized: "Rich"), .richText), (String(localized: "Link"), .link),
+        (String(localized: "Immagini"), .image), (String(localized: "File"), .file), (String(localized: "Colori"), .color),
     ]
 
     var body: some View {
@@ -53,7 +54,7 @@ struct PanelView: View {
 
             filterBar
             Spacer()
-            Text(model.query.isEmpty && model.kindFilter == nil ? (model.totalCount == 1 ? "1 elemento" : "\(model.totalCount) elementi") : (model.results.count == 1 ? "1 risultato" : "\(model.results.count) risultati"))
+            Text(model.query.isEmpty && model.kindFilter == nil ? (model.totalCount == 1 ? String(localized: "1 elemento") : String(localized: "\(model.totalCount) elementi")) : (model.results.count == 1 ? String(localized: "1 risultato") : String(localized: "\(model.results.count) risultati")))
                 .font(Theme.ui(12)).foregroundStyle(.secondary).monospacedDigit()
             Button(action: actions.settings) { Image(systemName: "gearshape") }
                 .buttonStyle(.borderless).foregroundStyle(.secondary).help("Impostazioni (⌘,)")
@@ -121,14 +122,15 @@ struct PanelView: View {
         let cal = Calendar.current
         let d = model.results[i].createdAt
         if i > 0, cal.isDate(d, inSameDayAs: model.results[i - 1].createdAt) { return nil }
-        if cal.isDateInToday(d) { return "Oggi" }
-        if cal.isDateInYesterday(d) { return "Ieri" }
+        if cal.isDateInToday(d) { return String(localized: "Oggi") }
+        if cal.isDateInYesterday(d) { return String(localized: "Ieri") }
         return d.formatted(.dateTime.weekday(.wide).day().month(.abbreviated))
     }
 
     private var hints: some View {
         HStack(spacing: 14) {
-            ForEach([("↩", "incolla"), ("⇧↩", "testo semplice"), ("⌥↩", "per agenti"), ("␣", "anteprima"), ("⌘⌫", "elimina"), ("esc", "chiudi")], id: \.0) { k, v in
+            ForEach([("↩", String(localized: "incolla")), ("⇧↩", String(localized: "testo semplice")), ("⌥↩", String(localized: "per agenti")),
+                         ("␣", String(localized: "anteprima")), ("⌘⌫", String(localized: "elimina")), ("esc", String(localized: "chiudi"))], id: \.0) { k, v in
                 HStack(spacing: 5) { KeyCap(k); Text(v) }
             }
             Spacer()

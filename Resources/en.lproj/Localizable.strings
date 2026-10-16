@@ -1,0 +1,119 @@
+/* English. Keys are the Italian source strings. */
+
+/* Kinds and filters */
+"Testo" = "Text";
+"Rich text" = "Rich text";
+"Link" = "Link";
+"Immagine" = "Image";
+"File" = "File";
+"Colore" = "Color";
+"Tutto" = "All";
+"Rich" = "Rich";
+"Immagini" = "Images";
+"Colori" = "Colors";
+
+/* Card */
+"%@ da %@: %@" = "%1$@ from %2$@: %3$@";
+"app sconosciuta" = "unknown app";
+"Sconosciuta" = "Unknown";
+"Contiene segreti: ⌥↩ li sostituisce con segnaposto" = "Contains secrets: ⌥↩ replaces them with placeholders";
+"Testo da terminale: ⌥↩ lo incolla pulito" = "Terminal text: ⌥↩ pastes it cleaned up";
+"1 file" = "1 file";
+"%lld file" = "%lld files";
+"link" = "link";
+"colore" = "color";
+"%lld righe" = "%lld lines";
+"%lld car." = "%lld chars";
+"+ altri %lld" = "+ %lld more";
+
+/* Panel */
+"Cerca  ·  type:image  app:Safari  oggi" = "Search  ·  type:image  app:Safari  today";
+"anche per significato" = "also by meaning";
+"Risultati anche per significato, oltre che per parole" = "Results by meaning as well as by words";
+"1 elemento" = "1 item";
+"%lld elementi" = "%lld items";
+"1 risultato" = "1 result";
+"%lld risultati" = "%lld results";
+"Impostazioni (⌘,)" = "Settings (⌘,)";
+"Impostazioni" = "Settings";
+"Incolla" = "Paste";
+"Incolla come testo semplice" = "Paste as Plain Text";
+"Incolla per agenti (pulito, senza segreti)" = "Paste for Agents (cleaned, no secrets)";
+"Copia" = "Copy";
+"Anteprima" = "Preview";
+"Elimina" = "Delete";
+"Oggi" = "Today";
+"Ieri" = "Yesterday";
+"incolla" = "paste";
+"testo semplice" = "plain text";
+"per agenti" = "for agents";
+"anteprima" = "preview";
+"elimina" = "delete";
+"chiudi" = "close";
+"Ancora niente" = "Nothing yet";
+"Copia qualcosa con ⌘C: comparirà qui." = "Copy something with ⌘C and it will show up here.";
+"Nessun risultato per “%@”" = "No results for “%@”";
+"La ricerca guarda testo, testo nelle immagini e significato. Prova parole diverse o togli i filtri." = "Search looks at text, text in images and meaning. Try different words or remove the filters.";
+
+/* Preview */
+"da %@" = "from %@";
+"Testo riconosciuto" = "Recognized text";
+"per agenti, senza segreti" = "for agents, no secrets";
+
+/* Settings */
+"Non riesco a cambiare l’avvio al login: %@" = "Can’t change launch at login: %@";
+"Approva Trove in Impostazioni di Sistema › Generali › Elementi di login." = "Approve Trove in System Settings › General › Login Items & Extensions.";
+"Usa almeno ⌘, ⌥ o ⌃ insieme a un tasto." = "Use at least ⌘, ⌥ or ⌃ together with a key.";
+"%@ è già usata da un’altra app." = "%@ is already used by another app.";
+"Generale" = "General";
+"Apri Trove" = "Open Trove";
+"Premi la nuova scorciatoia…" = "Press the new shortcut…";
+"Ripristina ⇧⌘V" = "Reset to ⇧⌘V";
+"Avvia Trove al login" = "Launch Trove at login";
+"Incolla nell’app attiva" = "Paste into the active app";
+"Permesso concesso" = "Permission granted";
+"Concedi accesso Accessibilità" = "Grant Accessibility access";
+"Nascondi i segreti nelle chat AI" = "Hide secrets in AI chats";
+"AI e agenti" = "AI and agents";
+"In ChatGPT, Claude, Perplexity e Gemini chiavi API, token, password, carte e IBAN diventano segnaposto come <OPENAI_KEY_1>, con un avviso. Nei terminali ↩ incolla com’è; ⌥↩ incolla ovunque la versione pulita e senza segreti. Le immagini incollate in un terminale diventano il percorso del file." = "In ChatGPT, Claude, Perplexity and Gemini, API keys, tokens, passwords, cards and IBANs become placeholders like <OPENAI_KEY_1>, with a notice. In terminals ↩ pastes as is; ⌥↩ pastes the cleaned version without secrets anywhere. Images pasted into a terminal become the file path.";
+"Backup su Google Drive" = "Backup to Google Drive";
+"Cartella" = "Folder";
+"Backup automatico ogni 24 ore" = "Automatic backup every 24 hours";
+"Ultimo backup" = "Last backup";
+"mai" = "never";
+"Esegui backup ora" = "Back Up Now";
+"Ripristina dal backup…" = "Restore from Backup…";
+"Google Drive per desktop non trovato. Installalo e accedi: Trove salverà la history in Il mio Drive/Trove." = "Google Drive for desktop not found. Install it and sign in: Trove will save your history to My Drive/Trove.";
+"History" = "History";
+"Elementi salvati" = "Saved items";
+"Ricerca per significato" = "Search by meaning";
+"Attiva (Apple Intelligence on-device)" = "On (on-device Apple Intelligence)";
+"Solo embedding locali: Apple Intelligence non disponibile" = "Local embeddings only: Apple Intelligence unavailable";
+"Conservazione" = "Retention";
+"Per sempre" = "Forever";
+"Cancella tutta la history…" = "Delete All History…";
+"Ripristinare il backup?" = "Restore the backup?";
+"Ripristina e riavvia" = "Restore and Relaunch";
+"Annulla" = "Cancel";
+"La history attuale su questo Mac verrà sostituita da quella del backup." = "The current history on this Mac will be replaced by the backup’s.";
+"Cancellare tutta la history?" = "Delete all history?";
+"Cancella" = "Delete";
+"Gli elementi locali vengono eliminati. I backup su Google Drive restano." = "Local items will be deleted. Backups on Google Drive are kept.";
+
+/* App delegate */
+"Trove non riesce ad aprire la history" = "Trove can’t open the history";
+"%@\n\nCartella: %@" = "%1$@\n\nFolder: %2$@";
+"1 segreto nascosto con un segnaposto" = "1 secret hidden with a placeholder";
+"%lld segreti nascosti con segnaposto" = "%lld secrets hidden with placeholders";
+"Per incollare l’originale disattiva l’opzione in Impostazioni › AI e agenti." = "To paste the original, turn the option off in Settings › AI and agents.";
+"Backup in corso…" = "Backing up…";
+"Backup completato in %@." = "Backup completed in %@.";
+"Google Drive per desktop non trovato." = "Google Drive for desktop not found.";
+"Backup non riuscito: %@" = "Backup failed: %@";
+"Il backup su Drive non è leggibile (forse non ancora scaricato): la history locale è intatta." = "The backup on Drive can’t be read (maybe not downloaded yet): your local history is intact.";
+"Ripristino non riuscito: %@. La history locale è intatta." = "Restore failed: %@. Your local history is intact.";
+"Ripristino non riuscito" = "Restore failed";
+"Impostazioni…" = "Settings…";
+"Controlla aggiornamenti…" = "Check for Updates…";
+"Esci da Trove" = "Quit Trove";
+"Impostazioni di Trove" = "Trove Settings";

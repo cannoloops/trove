@@ -28,7 +28,7 @@ struct CardView: View {
             .strokeBorder(Color.trove, lineWidth: 2).padding(-3).opacity(selected ? 1 : 0))
         .animation(.easeOut(duration: 0.12), value: selected)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(item.kind.label) da \(item.sourceApp ?? "app sconosciuta"): \(item.title ?? String(item.text.prefix(80)))")
+        .accessibilityLabel("\(item.kind.label) da \(item.sourceApp ?? String(localized: "app sconosciuta")): \(item.title ?? String(item.text.prefix(80)))")
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
@@ -39,7 +39,7 @@ struct CardView: View {
                 Image(nsImage: icon).resizable().frame(width: 18, height: 18)
             }
             VStack(alignment: .leading, spacing: 0) {
-                Text(item.sourceApp ?? "Sconosciuta").font(Theme.ui(11, .semibold)).foregroundStyle(.primary)
+                Text(item.sourceApp ?? String(localized: "Sconosciuta")).font(Theme.ui(11, .semibold)).foregroundStyle(.primary)
                 Text(item.createdAt.formatted(.relative(presentation: .named))).font(Theme.ui(10)).foregroundStyle(.secondary)
             }
             .lineLimit(1)
@@ -59,12 +59,12 @@ struct CardView: View {
     private var detail: String {
         switch item.kind {
         case .image: item.text
-        case .file: item.filePaths.count == 1 ? "1 file" : "\(item.filePaths.count) file"
-        case .link: "link"
-        case .color: "colore"
+        case .file: item.filePaths.count == 1 ? String(localized: "1 file") : String(localized: "\(item.filePaths.count) file")
+        case .link: String(localized: "link")
+        case .color: String(localized: "colore")
         default:
-            CodeStyle.language(of: item.text).map { _ in "\(item.text.split(separator: "\n", omittingEmptySubsequences: false).count) righe" }
-                ?? "\(item.text.count) car."
+            CodeStyle.language(of: item.text).map { _ in String(localized: "\(item.text.split(separator: "\n", omittingEmptySubsequences: false).count) righe") }
+                ?? String(localized: "\(item.text.count) car.")
         }
     }
 }
