@@ -21,7 +21,7 @@ import Testing
 
         Second paragraph.
         """
-        #expect(Cleaner.clean(wrapped) == "Every visual line break becomes a hard newline in the clipboard and this is really annoying when you paste the answer into another document because it breaks.\n\nSecond paragraph.")
+        #expect(Cleaner.clean(wrapped, fromTerminal: true) == "Every visual line break becomes a hard newline in the clipboard and this is really annoying when you paste the answer into another document because it breaks.\n\nSecond paragraph.")
     }
     @Test func keepsBackslashContinuationsAndCode() {
         let cmd = "docker run --rm -it \\\n  -v $(pwd):/app \\\n  node:22 npm test"

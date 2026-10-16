@@ -72,11 +72,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func paste(_ item: ClipItem, mode: PasteMode) {
         let target = NSWorkspace.shared.frontmostApplication?.bundleIdentifier // il pannello non attiva Trove
-        Paster.write(store.get(item.id) ?? item, mode: mode, target: target, store: store)
+        let hidden = Paster.write(store.get(item.id) ?? item, mode: mode, target: target, store: store)
         monitor.skipCurrent()
         touch(item.id)
         panel.hide()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { Paster.sendPaste() }
+        if hidden > 0 {
+            Toast.show(hidden == 1 ? "1 segreto nascosto con un segnaposto" : "\(hidden) segreti nascosti con segnaposto",
+                       detail: "Per incollare l’originale disattiva l’opzione in Impostazioni › AI e agenti.")
+        }
     }
 
     private func copy(_ item: ClipItem) {

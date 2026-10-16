@@ -7,9 +7,10 @@ enum PasteMode { case normal, plain, agent }
 /// Scrive un elemento sul pasteboard e simula ⌘V nell'app attiva.
 @MainActor
 enum Paster {
+    /// Solo terminali veri: negli editor (VS Code, Cursor, Zed…) si incolla codice, immagini e file così come sono.
     static let terminals: Set<String> = [
         "com.apple.Terminal", "com.googlecode.iterm2", "com.mitchellh.ghostty", "dev.warp.Warp-Stable", "com.github.wez.wezterm",
-        "net.kovidgoyal.kitty", "org.alacritty", "com.microsoft.VSCode", "com.todesktop.230313mzl4w4u92", "com.exafunction.windsurf", "dev.zed.Zed",
+        "net.kovidgoyal.kitty", "org.alacritty",
     ]
     static let aiApps: Set<String> = [
         "com.openai.chat", "com.openai.codex", "com.anthropic.claudefordesktop", "ai.perplexity.mac", "ai.perplexity.macv3", "com.google.GeminiMacOS",
@@ -19,15 +20,17 @@ enum Paster {
     static var redactForAI: Bool { UserDefaults.standard.object(forKey: "redactForAI") as? Bool ?? true }
 
     /// `target`: bundle id dell'app che riceverà l'incolla (nil = sconosciuta, es. ⌘C).
-    static func write(_ item: ClipItem, mode: PasteMode, target: String?, store: Store) {
+    /// Ritorna quanti segreti sono stati nascosti automaticamente (per avvisare l'utente).
+    @discardableResult
+    static func write(_ item: ClipItem, mode: PasteMode, target: String?, store: Store) -> Int {
         let pb = NSPasteboard.general
         pb.clearContents()
         let toTerminal = target.map(terminals.contains) ?? false
-        let toAI = toTerminal || (target.map(aiApps.contains) ?? false)
+        let toAIChat = target.map(aiApps.contains) ?? false
 
         switch item.kind {
         case .image:
-            guard let blob = item.blobPath.map({ store.blobsDir.appendingPathComponent($0) }) else { return }
+            guard let blob = item.blobPath.map({ store.blobsDir.appendingPathComponent($0) }) else { return 0 }
             // agenti e terminali leggono file, non immagini dal pasteboard
             if mode == .agent || toTerminal, let path = try? AgentPaste.imagePath(blob: blob, cacheDir: cacheDir) {
                 pb.setString(path.path, forType: .string)
@@ -36,17 +39,26 @@ enum Paster {
                 if let tiff = NSImage(data: data)?.tiffRepresentation { pb.setData(tiff, forType: .tiff) }
             }
         case .file:
-            if mode == .normal && !toTerminal { pb.writeObjects(item.filePaths.map { URL(fileURLWithPath: $0) as NSURL }) }
+            // i terminali citano da soli i percorsi dei file URL (spazi compresi)
+            if mode == .normal { pb.writeObjects(item.filePaths.map { URL(fileURLWithPath: $0) as NSURL }) }
             else { pb.setString(item.filePaths.joined(separator: "\n"), forType: .string) }
         default:
-            if mode == .agent { pb.setString(AgentPaste.text(item.text), forType: .string); break }
-            if toAI, redactForAI, Secrets.contains(item.text) { pb.setString(Secrets.redact(item.text).text, forType: .string); break }
+            if mode == .agent {
+                pb.setString(AgentPaste.text(item.text, fromTerminal: item.sourceBundle.map(terminals.contains) ?? false), forType: .string)
+                break
+            }
+            // nelle chat AI i segreti non partono: segnaposto + avviso. Nei terminali ↩ resta fedele (es. export KEY=…)
+            if toAIChat, redactForAI {
+                let r = Secrets.redact(item.text)
+                if !r.found.isEmpty { pb.setString(r.text, forType: .string); return r.found.count }
+            }
             pb.setString(item.text, forType: .string)
             guard mode == .normal else { break }
             if let rtf = item.rtf { pb.setData(rtf, forType: .rtf) }
             if let html = item.html { pb.setString(html, forType: .html) }
             if item.kind == .link { pb.setString(item.text.trimmingCharacters(in: .whitespacesAndNewlines), forType: .URL) }
         }
+        return 0
     }
 
     static var isTrusted: Bool { AXIsProcessTrusted() }

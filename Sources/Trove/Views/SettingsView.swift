@@ -91,8 +91,8 @@ struct SettingsView: View {
                 }
             }
             Section("AI e agenti") {
-                Toggle("Nascondi i segreti quando incolli in app AI e terminali", isOn: $s.redactForAI)
-                Text("Chiavi API, token, password, carte e IBAN diventano segnaposto come <OPENAI_KEY_1>. ⌥↩ incolla sempre la versione pulita e senza segreti; le immagini incollate in un terminale diventano il percorso del file.")
+                Toggle("Nascondi i segreti quando incolli in ChatGPT, Claude, Perplexity e Gemini", isOn: $s.redactForAI)
+                Text("Chiavi API, token, password, carte e IBAN diventano segnaposto come <OPENAI_KEY_1>, con un avviso. Nei terminali ↩ incolla com’è; ⌥↩ incolla ovunque la versione pulita e senza segreti. Le immagini incollate in un terminale diventano il percorso del file.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section("Backup su Google Drive") {

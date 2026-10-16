@@ -75,15 +75,25 @@ struct CardView: View {
     }
 }
 
-/// Segreti e testo "sporco" da terminale, calcolati una volta per elemento.
+/// Segreti, testo "sporco" da terminale e testo da mostrare nella card, calcolati una volta per elemento.
+@MainActor
 enum Flags {
-    nonisolated(unsafe) private static var cache: [Int64: (secret: Bool, dirty: Bool)] = [:]
+    struct Info { var secret: Bool; var dirty: Bool; var shown: String }
+    // ponytail: cache senza eviction, chiave id+hash (gli id SQLite possono essere riusati); basta per qualche decina di migliaia di card
+    private static var cache: [String: Info] = [:]
 
-    static func of(_ it: ClipItem) -> (secret: Bool, dirty: Bool) {
-        guard [.text, .richText, .link].contains(it.kind) else { return (false, false) }
-        if let c = cache[it.id] { return c }
-        let c = (Secrets.contains(it.text), Cleaner.needsCleaning(String(it.text.prefix(20000))))
-        cache[it.id] = c
+    static func of(_ it: ClipItem) -> Info {
+        guard [.text, .richText, .link].contains(it.kind) else { return Info(secret: false, dirty: false, shown: it.text) }
+        let key = "\(it.id)#\(it.hash)"
+        if let c = cache[key] { return c }
+        let head = String(it.text.prefix(20000))
+        let term = it.sourceBundle.map(Paster.terminals.contains) ?? false
+        let secret = Secrets.contains(head)
+        let dirty = it.kind == .text && Cleaner.needsCleaning(head, fromTerminal: term)
+        var shown = dirty ? Cleaner.clean(String(head.prefix(4000)), fromTerminal: term) : head
+        if secret { shown = Secrets.redact(shown).text }
+        let c = Info(secret: secret, dirty: dirty, shown: shown)
+        cache[key] = c
         return c
     }
 }
@@ -106,13 +116,7 @@ struct ItemBody: View {
     let compact: Bool
 
     /// Nella card: testo da terminale già pulito e segreti mascherati. L'anteprima mostra l'originale.
-    private var shown: String {
-        guard compact else { return item.text }
-        let f = Flags.of(item)
-        var t = f.dirty ? Cleaner.clean(String(item.text.prefix(4000))) : item.text
-        if f.secret { t = Secrets.redact(String(t.prefix(4000))).text }
-        return t
-    }
+    private var shown: String { compact ? Flags.of(item).shown : item.text }
 
     var body: some View {
         switch item.kind {
@@ -188,7 +192,8 @@ struct ItemBody: View {
     }
 
     @ViewBuilder private var richText: some View {
-        if let rtf = item.rtf, let ns = NSAttributedString(rtf: rtf, documentAttributes: nil),
+        if compact, Flags.of(item).secret { prose(Text(shown)) } // niente segreti in chiaro nella card
+        else if let rtf = item.rtf, let ns = NSAttributedString(rtf: rtf, documentAttributes: nil),
            let a = try? AttributedString(ns.attributedSubstring(from: NSRange(location: 0, length: min(ns.length, compact ? 500 : 20000))), including: \.appKit) {
             prose(Text(a), styled: true)
         } else { prose(Text(item.text)) }
