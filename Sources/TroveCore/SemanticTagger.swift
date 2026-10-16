@@ -24,7 +24,7 @@ public enum SemanticTagger {
     }
 
     public static func expand(query: String) async -> [String] {
-        func instr(_ lang: String) -> String {
+        @Sendable func instr(_ lang: String) -> String {
             """
             You expand a search query for a notes app. Reply ONLY with 8 comma-separated lowercase \(lang) words: synonyms, \
             related professions, places, objects and activities that a matching note might contain. \(lang) words only.
