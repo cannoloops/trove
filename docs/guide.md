@@ -22,6 +22,7 @@ History is kept until you delete it: one item with ⌘⌫ in the panel, or every
 
 - **Terminal cleanup**: text copied from a terminal or an agent TUI loses ANSI escapes, box-drawing frames, trailing padding, common indentation and lines broken by the terminal wrap. Text without clear terminal layout is left untouched.
 - **Secrets** are replaced with stable placeholders such as `<OPENAI_KEY_1>` or `<PASSWORD_1>`.
+- **Personal data**: Italian tax codes and VAT numbers (checksum-validated), e-mail addresses and Italian phone numbers become `<CF_1>`, `<PIVA_1>`, `<EMAIL_1>`, `<PHONE_1>`. Only with ⌥↩.
 - Images become a file path.
 
 Cards show a hint when ⌥↩ would change something (secrets found, terminal text).

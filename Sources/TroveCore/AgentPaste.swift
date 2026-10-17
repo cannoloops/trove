@@ -7,7 +7,7 @@ public enum AgentPaste {
     }
 
     public static func redact(_ s: String, fromTerminal: Bool = false) -> Secrets.Result {
-        Secrets.redact(Cleaner.clean(s, fromTerminal: fromTerminal))
+        Secrets.redact(Cleaner.clean(s, fromTerminal: fromTerminal), pii: true)
     }
 
     /// Copia il blob in una cartella senza spazi nel percorso (comoda da incollare in un terminale).

@@ -33,12 +33,22 @@ public enum Secrets {
         ("IBAN", #"\b[A-Z]{2}\d{2}(?: ?[A-Z0-9]{4}){2,7}(?: ?[A-Z0-9]{1,4})?\b"#, 0),
     ].map { ($0.0, try! NSRegularExpression(pattern: $0.1), $0.2) }
 
+    /// Dati personali italiani (regole e checksum dalla rete regex di rizzo-pii), solo con `pii: true`.
+    /// Dopo i segreti: `admin:pass@host` resta PASSWORD, non EMAIL.
+    static let piiRules: [(String, NSRegularExpression, Int)] = [
+        ("EMAIL", #"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}"#, 0),
+        // forma con omocodia (cifre sostituite da LMNPQRSTUV): il checksum decide
+        ("CF", #"\b[A-Za-z]{6}[\dLMNPQRSTUVlmnpqrstuv]{2}[A-Za-z][\dLMNPQRSTUVlmnpqrstuv]{2}[A-Za-z][\dLMNPQRSTUVlmnpqrstuv]{3}[A-Za-z]\b"#, 0),
+        ("PIVA", #"(?<!\d)\d{11}(?!\d)"#, 0),
+        ("PHONE", #"(?<![\w.])(?:\+39[\s.\-]?)?(?:3\d{2}[\s.\-]?\d{3}[\s.\-]?\d{3,4}|0\d{1,3}[\s.\-]?\d{5,8})(?!\w)"#, 0),
+    ].map { ($0.0, try! NSRegularExpression(pattern: $0.1), $0.2) }
+
     /// Input oltre 200k caratteri non viene analizzato oltre quel limite (regex lineari, ma un tetto evita sorprese).
-    public static func redact(_ s: String) -> Result {
+    public static func redact(_ s: String, pii: Bool = false) -> Result {
         let ns = s as NSString
         let scan = NSRange(location: 0, length: min(ns.length, 200_000))
         var taken: [(NSRange, String)] = []
-        for (kind, re, group) in rules {
+        for (kind, re, group) in pii ? rules + piiRules : rules {
             for m in re.matches(in: s, range: scan) {
                 let r = m.range(at: group)
                 guard r.location != NSNotFound, !taken.contains(where: { NSIntersectionRange($0.0, r).length > 0 }) else { continue }
@@ -47,6 +57,8 @@ public enum Secrets {
                 if kind == "IBAN", !iban(v.replacingOccurrences(of: " ", with: "")) { continue }
                 if kind == "OPENAI_KEY", !v.contains(where: \.isNumber) { continue } // es. .sk-loading-spinner-container
                 if kind == "PASSWORD", v.allSatisfy(\.isNumber) { continue }            // TTL, porte, conteggi
+                if kind == "CF", !cf(v.uppercased()) { continue }
+                if kind == "PIVA", !piva(v) { continue }
                 taken.append((r, kind))
             }
         }
@@ -76,6 +88,29 @@ public enum Secrets {
             return acc + (x > 9 ? x - 9 : x)
         }
         return sum % 10 == 0
+    }
+
+    static func piva(_ s: String) -> Bool {
+        let d = s.compactMap(\.wholeNumberValue)
+        guard d.count == 11 else { return false }
+        let t = (0..<10).reduce(0) { acc, i in
+            let x = i % 2 == 0 ? d[i] : d[i] * 2
+            return acc + (x > 9 ? x - 9 : x)
+        }
+        return (10 - t % 10) % 10 == d[10]
+    }
+
+    /// Carattere di controllo del codice fiscale: valori tabellari per le posizioni dispari, A=0…Z=25 / 0…9 per le pari.
+    static func cf(_ s: String) -> Bool {
+        let odd = [1, 0, 5, 7, 9, 13, 15, 17, 19, 21, 2, 4, 18, 20, 11, 3, 6, 8, 12, 14, 16, 10, 22, 25, 24, 23] // A…Z (0…9 come A…J)
+        let c = Array(s.utf8)
+        guard c.count == 16 else { return false }
+        var t = 0
+        for (i, ch) in c.prefix(15).enumerated() {
+            let v = ch >= 65 ? Int(ch) - 65 : Int(ch) - 48 // lettera o cifra → 0…25 / 0…9
+            t += i % 2 == 0 ? odd[v] : v
+        }
+        return Int(c[15]) - 65 == t % 26
     }
 
     static func iban(_ s: String) -> Bool {

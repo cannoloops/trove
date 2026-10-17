@@ -80,6 +80,18 @@ import Testing
             #expect(Secrets.redact(s).found.isEmpty, "\(s)")
         }
     }
+    @Test func redactsItalianPiiOnlyWhenAsked() {
+        let s = "Mario, rssmra85h12f205y (omocodico RSSMRA85H12F20RT), P.IVA 01122334459, m.rossi@studio.it, tel. +39 333 123 4567, fisso 02-12345678"
+        #expect(Secrets.redact(s).found.isEmpty)
+        let r = Secrets.redact(s, pii: true)
+        #expect(r.text == "Mario, <CF_1> (omocodico <CF_2>), P.IVA <PIVA_1>, <EMAIL_1>, tel. <PHONE_1>, fisso <PHONE_2>")
+    }
+    @Test func piiNeedsValidChecksumAndKeepsSecretsFirst() {
+        for s in ["CF RSSMRA85H12F205A", "P.IVA 12345678901", "versione 1.0.3331234567", "CAP 00185, ordine 2024"] {
+            #expect(Secrets.redact(s, pii: true).found.isEmpty, "\(s)")
+        }
+        #expect(Secrets.redact("postgres://admin:s3cr3t@db.example.com", pii: true).text == "postgres://admin:<PASSWORD_1>@db.example.com")
+    }
 }
 
 @Suite struct AgentPasteTests {
