@@ -2,6 +2,8 @@
 
 A clipboard history manager for macOS 26. Press **⇧⌘V**, find what you copied, press **↩** to paste it.
 
+<img alt="Pasting into claude.ai: Trove offers to hide the API key, which becomes a placeholder; in a terminal an image becomes a file path" src="docs/demo/agents.gif" width="680">
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/panel-dark.png">
   <img alt="The Trove panel with recent items" src="docs/screenshots/panel-light.png">

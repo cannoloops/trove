@@ -45,6 +45,40 @@ enum Snapshot {
         }
     }
 
+    /// `Trove --record <dir>`: fotogrammi PNG a 30 fps delle scene animate del tutorial, per le GIF demo.
+    static func record(_ dir: URL) {
+        for (p, name) in [(2, "search"), (3, "clean"), (4, "agents")] {
+            let out = dir.appendingPathComponent(name)
+            try? FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+            let size = NSSize(width: 680, height: 500)
+            let host = NSHostingView(rootView: TutorialView(combo: "⇧⌘V", page: p) {}
+                .frame(width: size.width, height: size.height).background(Color(nsColor: .windowBackgroundColor)))
+            host.frame = NSRect(origin: .zero, size: size)
+            let win = NSWindow(contentRect: host.frame, styleMask: .borderless, backing: .buffered, defer: false)
+            win.appearance = NSAppearance(named: .aqua)
+            win.contentView = host
+            // la cattura non sempre sta al passo con le animazioni: ogni fotogramma tiene il suo istante reale,
+            // e frames.txt (concat di ffmpeg) li riproduce con le durate vere. PNG scritti dopo, fuori dal tempo misurato.
+            var frames: [(NSBitmapImageRep, TimeInterval)] = []
+            let start = Date()
+            while Date().timeIntervalSince(start) < 7 {
+                RunLoop.main.run(until: Date().addingTimeInterval(1.0 / 60))
+                host.layoutSubtreeIfNeeded()
+                let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds)!
+                host.cacheDisplay(in: host.bounds, to: rep)
+                frames.append((rep, Date().timeIntervalSince(start)))
+            }
+            var list = ""
+            for (f, (rep, t)) in frames.enumerated() {
+                let file = String(format: "%04d.png", f)
+                try? rep.representation(using: .png, properties: [:])?.write(to: out.appendingPathComponent(file))
+                let next = f + 1 < frames.count ? frames[f + 1].1 : t + 1.0 / 30
+                list += "file '\(file)'\nduration \(String(format: "%.4f", next - t))\n"
+            }
+            try? list.write(to: out.appendingPathComponent("frames.txt"), atomically: true, encoding: .utf8)
+        }
+    }
+
     static func save(_ view: some View, size: NSSize, appearance: NSAppearance.Name, to url: URL) {
         // fondo neutro tipo scrivania: il vetro vero non si renderizza fuori schermo
         let host = NSHostingView(rootView: view.frame(width: size.width, height: size.height)
