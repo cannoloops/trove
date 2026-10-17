@@ -24,16 +24,15 @@ if [[ -n ${VERSION:-} ]]; then
   plutil -replace CFBundleShortVersionString -string "$VERSION" $APP/Contents/Info.plist
   plutil -replace CFBundleVersion -string "${BUILD_NUMBER:-$VERSION}" $APP/Contents/Info.plist
 fi
-if [[ $ID == "Developer ID"* ]]; then
-  # hardened runtime + timestamp per la notarizzazione, framework firmato dall'interno verso l'esterno
-  S=(codesign --force --options runtime --timestamp --sign "$ID")
-  $S $APP/Contents/Frameworks/Sparkle.framework/Versions/B/{XPCServices/*.xpc,Autoupdate,Updater.app}
-  $S $APP/Contents/Frameworks/Sparkle.framework
-  $S $APP
-else
-  # ponytail: senza Team ID niente hardened runtime, la library validation rifiuterebbe Sparkle
-  codesign --force --deep --sign "${ID:--}" $APP
-fi
+# hardened runtime sempre: blocca DYLD_INSERT_LIBRARIES, che erediterebbe il permesso Accessibilità.
+# Framework firmato dall'interno verso l'esterno.
+S=(codesign --force --options runtime --sign "${ID:--}")
+ENT=()
+if [[ $ID == "Developer ID"* ]]; then S+=(--timestamp)  # per la notarizzazione
+else ENT=(--entitlements Resources/Trove.entitlements); fi
+$S $APP/Contents/Frameworks/Sparkle.framework/Versions/B/{XPCServices/*.xpc,Autoupdate,Updater.app}
+$S $APP/Contents/Frameworks/Sparkle.framework
+$S $ENT $APP
 codesign --verify --deep --strict $APP && echo "Pronta: $APP"
 [[ ${1:-} == --install || ${1:-} == --open ]] || exit 0
 pkill -x Trove 2>/dev/null && sleep 0.5 || true
