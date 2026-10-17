@@ -38,6 +38,10 @@
 "Impostazioni" = "Settings";
 "Incolla" = "Paste";
 "Incolla come testo semplice" = "Paste as Plain Text";
+"Tema" = "Appearance";
+"Sistema" = "System";
+"Chiaro" = "Light";
+"Scuro" = "Dark";
 "Incolla solo il testo dell’immagine" = "Paste Only the Image Text";
 "Nessun testo riconosciuto nell’immagine" = "No text recognized in the image";
 "↩ incolla l’immagine." = "↩ pastes the image.";

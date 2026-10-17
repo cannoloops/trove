@@ -12,6 +12,11 @@ enum Theme {
     static let cardRadius: CGFloat = 14
     static let fieldRadius: CGFloat = 10
     static let chipRadius: CGFloat = 5
+
+    /// Tema scelto nelle Impostazioni: "system", "light" o "dark".
+    static func applyAppearance(_ v: String = UserDefaults.standard.string(forKey: "appearance") ?? "dark") {
+        NSApp.appearance = v == "light" ? NSAppearance(named: .aqua) : v == "dark" ? NSAppearance(named: .darkAqua) : nil
+    }
 }
 
 extension Color {

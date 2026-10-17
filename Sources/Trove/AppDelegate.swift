@@ -52,6 +52,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             try? FileManager.default.removeItem(at: Paster.cacheDir)
         }
 
+        Theme.applyAppearance()
         setupStatusItem()
         if !Paster.isTrusted { Paster.promptForAccessibility() }
 

@@ -67,6 +67,7 @@ struct SettingsView: View {
     @ObservedObject var app: AppModel
     @State private var confirmRestore = false
     @State private var confirmClear = false
+    @AppStorage("appearance") private var appearance = "dark"
 
     var body: some View {
         Form {
@@ -81,6 +82,12 @@ struct SettingsView: View {
                     }
                 }
                 if let e = s.hotKeyError { Text(e).foregroundStyle(.red).font(.caption) }
+                Picker("Tema", selection: $appearance) {
+                    Text("Sistema").tag("system")
+                    Text("Chiaro").tag("light")
+                    Text("Scuro").tag("dark")
+                }
+                .onChange(of: appearance) { _, v in Theme.applyAppearance(v) }
                 Toggle("Avvia Trove al login", isOn: Binding(get: { s.launchAtLogin }, set: { s.setLogin($0) }))
                 if let e = s.loginError { Text(e).foregroundStyle(.orange).font(.caption) }
                 LabeledContent("Incolla nell’app attiva") {
