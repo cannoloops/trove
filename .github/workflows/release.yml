@@ -10,9 +10,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: swift test
+      - name: Identità di firma
+        # certificato self-signed fisso: la firma resta uguale tra le versioni e macOS non revoca l'Accessibilità
+        env:
+          SIGN_CERT_P12: ${{ secrets.SIGN_CERT_P12 }}
+          SIGN_CERT_PASSWORD: ${{ secrets.SIGN_CERT_PASSWORD }}
+        run: |
+          KC=$RUNNER_TEMP/sign.keychain-db; PW=$(openssl rand -hex 16)
+          security create-keychain -p $PW $KC && security set-keychain-settings $KC && security unlock-keychain -p $PW $KC
+          printf '%s' "$SIGN_CERT_P12" | base64 -d > $RUNNER_TEMP/sign.p12
+          security import $RUNNER_TEMP/sign.p12 -k $KC -P "$SIGN_CERT_PASSWORD" -T /usr/bin/codesign
+          rm $RUNNER_TEMP/sign.p12
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $PW $KC >/dev/null
+          security list-keychains -d user -s $KC $(security list-keychains -d user | tr -d '"')
       - name: dmg + appcast
         env:
           SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+          SIGN_IDENTITY: Trove Release Signing
         run: |
           KEY=$(mktemp); trap 'rm -f $KEY' EXIT
           printf '%s' "$SPARKLE_ED_PRIVATE_KEY" > $KEY
