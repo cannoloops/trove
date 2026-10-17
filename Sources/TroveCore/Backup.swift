@@ -48,6 +48,16 @@ public enum Backup {
         let final = dest.appendingPathComponent("trove.sqlite")
         if fm.fileExists(atPath: final.path) { _ = try fm.replaceItemAt(final, withItemAt: tmp) } else { try fm.moveItem(at: tmp, to: final) }
         try syncBlobs(from: store.blobsDir, to: blobs)
+        pruneBlobs(at: blobs, keeping: store.blobsDir)
+    }
+
+    /// Le immagini cancellate in locale spariscono anche dal backup, altrimenti un ripristino le riporterebbe.
+    static func pruneBlobs(at dst: URL, keeping src: URL) {
+        let fm = FileManager.default
+        let live = Set((try? fm.contentsOfDirectory(atPath: src.path)) ?? [])
+        for f in (try? fm.contentsOfDirectory(atPath: dst.path)) ?? [] where !live.contains(f) {
+            try? fm.removeItem(at: dst.appendingPathComponent(f))
+        }
     }
 
     public static func lastBackupDate(at dest: URL) -> Date? {

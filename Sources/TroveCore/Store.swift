@@ -21,13 +21,17 @@ public final class Store: @unchecked Sendable {
         }
         try exec("""
         PRAGMA journal_mode=WAL;
+        PRAGMA secure_delete=ON;
         CREATE TABLE IF NOT EXISTS items(
           id INTEGER PRIMARY KEY, kind TEXT NOT NULL, text TEXT NOT NULL, rtf BLOB, html TEXT, blob TEXT,
           files TEXT, app TEXT, bundle TEXT, created REAL NOT NULL, hash TEXT NOT NULL UNIQUE,
           ocr TEXT, title TEXT, emb BLOB, lang TEXT, tags TEXT);
         CREATE INDEX IF NOT EXISTS items_created ON items(created DESC);
         CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(body, tokenize='trigram');
+        INSERT INTO fts(fts, rank) VALUES('secure-delete', 1);
         """)
+        // secure_delete azzera le pagine liberate da qui in poi; un VACUUM una tantum toglie i residui di prima
+        if scalar("PRAGMA user_version") < 1 { try exec("VACUUM; PRAGMA user_version=1;") }
     }
 
     /// URL di un blob, solo se il nome è un file dentro `blobs/`: un DB ripristinato non deve puntare altrove (`../`).
@@ -88,12 +92,15 @@ public final class Store: @unchecked Sendable {
             if let url = get(id)?.blobPath.flatMap(blobURL) { try? FileManager.default.removeItem(at: url) }
             run("DELETE FROM items WHERE id=?", id)
             run("DELETE FROM fts WHERE rowid=?", id)
+            // il testo cancellato non deve restare nei frame del WAL
+            run("PRAGMA wal_checkpoint(TRUNCATE)")
         }
     }
 
     public func deleteAll() {
         lock.withLock {
             run("DELETE FROM items"); run("DELETE FROM fts")
+            run("VACUUM"); run("PRAGMA wal_checkpoint(TRUNCATE)")
             try? FileManager.default.removeItem(at: blobsDir)
             try? FileManager.default.createDirectory(at: blobsDir, withIntermediateDirectories: true)
         }
@@ -247,6 +254,12 @@ public final class Store: @unchecked Sendable {
             }
         }
         sqlite3_step(st)
+    }
+
+    private func scalar(_ sql: String) -> Int {
+        guard let st = try? prepare(sql) else { return 0 }
+        defer { sqlite3_finalize(st) }
+        return sqlite3_step(st) == SQLITE_ROW ? Int(sqlite3_column_int64(st, 0)) : 0
     }
 
     private func exec(_ sql: String) throws {
