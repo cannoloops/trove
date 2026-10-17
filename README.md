@@ -58,7 +58,7 @@ Also: optional backup to Google Drive for desktop (`My Drive/Trove`), light and 
    ```
 3. Grant **Accessibility** when asked (System Settings › Privacy & Security › Accessibility): Trove needs it to paste into the frontmost app.
 
-Trove checks for updates by itself (menu bar icon › Check for Updates…). Because builds are not Developer ID signed, macOS may forget the Accessibility permission after an update: if pasting stops working, remove Trove from the Accessibility list and add it again.
+Trove checks for updates by itself (menu bar icon › Check for Updates…). Releases from 1.0.1 on share a fixed signing certificate, so the Accessibility permission survives updates. Updating from 1.0.0 is the exception: macOS forgets the permission once, so if pasting stops working, remove Trove from the Accessibility list and add it again.
 
 Requires macOS 26 on Apple silicon.
 

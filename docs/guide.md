@@ -58,7 +58,7 @@ Images pasted into a terminal are copied to the cache folder below and deleted a
 
 ## Troubleshooting
 
-**↩ copies but does not paste.** The Accessibility permission is missing or stale (this happens after updates, since builds are not Developer ID signed). Open System Settings › Privacy & Security › Accessibility, remove Trove with −, then add it again, or use the button in Trove's Settings.
+**↩ copies but does not paste.** The Accessibility permission is missing or stale (this happens once when updating from 1.0.0, or with local builds signed ad-hoc). Open System Settings › Privacy & Security › Accessibility, remove Trove with −, then add it again, or use the button in Trove's Settings.
 
 **⇧⌘V does nothing.** Another app (Raycast, Alfred, another clipboard manager) may own the shortcut. Change it in either app: Trove's is under Settings › General › Open Trove.
 
