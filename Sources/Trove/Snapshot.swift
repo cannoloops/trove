@@ -37,8 +37,10 @@ enum Snapshot {
             }
             save(SettingsView(s: SettingsModel(), app: model), NSSize(width: 560, height: 820), "settings")
             for p in 0..<6 { save(TutorialView(combo: "⇧⌘V", page: p) {}, NSSize(width: 680, height: 500), "tutorial-\(p)") }
+            for p in 1..<6 { save(TutorialView(combo: "⇧⌘V", page: p, onDone: {}, frozen: true), NSSize(width: 680, height: 500), "scene-\(p)") }
             UserDefaults.standard.set(PanelEdge.left.rawValue, forKey: "panelEdge")
             save(TutorialView(combo: "⇧⌘V", page: 1) {}, NSSize(width: 680, height: 500), "tutorial-1-side")
+            save(TutorialView(combo: "⇧⌘V", page: 1, onDone: {}, frozen: true), NSSize(width: 680, height: 500), "scene-1-side")
             UserDefaults.standard.set(PanelEdge.bottom.rawValue, forKey: "panelEdge")
         }
     }

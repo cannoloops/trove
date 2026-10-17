@@ -8,7 +8,10 @@ struct TutorialView: View {
     let onDone: () -> Void
     @State private var forward = true
     @State private var trusted = Paster.isTrusted
-    @Environment(\.accessibilityReduceMotion) private var still
+    /// Scene ferme sul fotogramma finale (snapshot per README e sito).
+    var frozen = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var still: Bool { frozen || reduceMotion }
     private let count = 6
     private var last: Bool { page == count - 1 }
 

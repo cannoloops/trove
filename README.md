@@ -2,18 +2,52 @@
 
 A clipboard history manager for macOS 26. Press **⇧⌘V**, find what you copied, press **↩** to paste it.
 
-![Trove](docs/screenshots/panel-tahoe-light.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/panel-dark.png">
+  <img alt="The Trove panel with recent clips" src="docs/screenshots/panel-light.png">
+</picture>
 
-- Text, rich text, links, images, files and colors, with the source app
-- Search by words, by text inside images (OCR) and by meaning, on-device (uses Apple Intelligence when available)
-- Filters: `type:image`, `app:Safari`, `today`
-- **⌥↩** pastes a cleaned-up version: terminal artifacts removed, secrets replaced by placeholders like `<OPENAI_KEY_1>`
-- Pasting into the ChatGPT, Claude, Perplexity or Gemini desktop apps masks API keys, tokens, passwords, cards and IBANs automatically
-- Images pasted into a terminal become a file path
-- Optional backup to Google Drive for desktop (`My Drive/Trove`)
-- English and Italian UI
+Everything stays on your Mac, in `~/Library/Application Support/Trove`. A short tutorial opens on first launch; you can see it again from Settings.
 
-Everything stays on your Mac, in `~/Library/Application Support/Trove`.
+### Find it the way you remember it
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/search-dark.png">
+  <img alt="Searching receipt finds an invoice by meaning and a screenshot by its text" src="docs/screenshots/search-light.png">
+</picture>
+
+Text, rich text, links, images, files and colors, with the app they came from. Search by words, by meaning and by the text inside images, all on-device (with Apple Intelligence when available). Filters narrow it down: `type:image`, `app:Safari`, `today`.
+
+### Paste without the mouse
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/keyboard-dark.png">
+  <img alt="The side panel, moved with the arrow keys" src="docs/screenshots/keyboard-light.png">
+</picture>
+
+The panel opens from the side of the screen you choose in Settings (left by default). Move with ↑ ↓ (← → when it sits at the top or bottom), press ↩ to paste into the app you were using.
+
+### ⌥↩ pastes the clean version
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/clean-dark.png">
+  <img alt="Terminal leftovers removed and secrets replaced by placeholders" src="docs/screenshots/clean-light.png">
+</picture>
+
+Terminal artifacts are stripped, and API keys, passwords, cards, IBANs, Italian tax codes and VAT numbers, emails and phone numbers become placeholders like `<OPENAI_KEY_1>`.
+
+### Safe in AI chats, handy in the terminal
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/agents-dark.png">
+  <img alt="A secret pasted into claude.ai with the offer to hide it, and an image pasted into a terminal as a file path" src="docs/screenshots/agents-light.png">
+</picture>
+
+- Pasting with Trove into the ChatGPT, Claude, Perplexity or Gemini apps masks secrets automatically.
+- Pasting with ⌘V into those apps, or into their websites in Safari, Chrome, Arc, Brave, Edge or Firefox, offers to hide what Trove recognizes.
+- Images pasted into a terminal become a file path; ⇧↩ on an image pastes only the recognized text.
+
+Also: optional backup to Google Drive for desktop (`My Drive/Trove`), light and dark themes, English and Italian UI.
 
 ## Install
 
@@ -30,11 +64,11 @@ Requires macOS 26 on Apple silicon.
 
 ## Usage
 
-Press **⇧⌘V** (configurable in Settings) to open the panel over the current app.
+Press **⇧⌘V** (configurable in Settings) to open the panel over the current app. Settings also choose the side of the screen it opens from.
 
 | Key | Action |
 |---|---|
-| ← → | Move the selection |
+| ↑ ↓ or ← → | Move the selection (depends on the panel position) |
 | ↩ | Paste into the app you were using |
 | ⇧↩ | Paste as plain text |
 | ⌥↩ | Paste cleaned up and without secrets ([details](docs/guide.md#smart-paste)) |

@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trove — clipboard history for macOS</title>
+<meta name="description" content="A clipboard history manager for macOS 26. Press ⇧⌘V, find what you copied, press ↩ to paste it. On-device search by meaning, clean paste without secrets.">
+<meta property="og:title" content="Trove — clipboard history for macOS">
+<meta property="og:description" content="Press ⇧⌘V, find what you copied, press ↩ to paste it.">
+<meta property="og:image" content="screenshots/panel-dark.png">
+<link rel="icon" href="icon.png">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --surface: #f4f4f6;
+    --text: #1d1d1f;
+    --muted: #6e6e73;
+    --hairline: rgba(0, 0, 0, .1);
+    --gold: #b8851a;
+    --on-gold: #ffffff;
+    --sans: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1e; /* lo stesso fondo delle immagini: si fondono con la pagina */
+      --surface: #26262a;
+      --text: #f2f2f3;
+      --muted: #a1a1a8;
+      --hairline: rgba(255, 255, 255, .1);
+      --gold: #e8b44a;
+      --on-gold: #1e1e1e;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.55 var(--sans); }
+  a { color: var(--gold); text-underline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 6px; }
+  img { display: block; max-width: 100%; height: auto; }
+  code, kbd { font-family: var(--mono); font-size: .88em; }
+  kbd { padding: .1em .4em; border: 1px solid var(--hairline); border-radius: 5px; background: var(--surface); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* hero */
+  .hero { display: grid; grid-template-columns: 1fr 360px; gap: 64px; align-items: center; padding: 72px 0 96px; }
+  .wordmark { margin: 0; font-size: clamp(64px, 11vw, 112px); font-weight: 800; letter-spacing: -.045em; line-height: .9; color: var(--gold); }
+  .hero h1 { margin: 28px 0 12px; font-size: clamp(30px, 4.2vw, 44px); line-height: 1.1; letter-spacing: -.02em; font-weight: 700; max-width: 16ch; }
+  .lede { margin: 0; color: var(--muted); max-width: 46ch; }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 32px; }
+  .download { display: inline-block; padding: 12px 22px; border-radius: 999px; background: var(--gold); color: var(--on-gold); font-weight: 650; text-decoration: none; }
+  .download:hover { filter: brightness(1.06); }
+  .req { color: var(--muted); font-size: 14px; }
+
+  /* lo schermo finto: il pannello entra dal bordo sinistro, come nell'app */
+  .screen { position: relative; height: 540px; border-radius: 22px; border: 1px solid var(--hairline); background: var(--surface); overflow: hidden; }
+  .screen img { position: absolute; top: 10px; left: 10px; width: 300px; border-radius: 18px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .25); transition: transform .55s cubic-bezier(.2, .9, .3, 1.15), opacity .3s; }
+  .screen.closed img { transform: translateX(-115%); opacity: 0; }
+  .screen::after { content: ""; position: absolute; inset: auto 0 0 0; height: 90px; background: linear-gradient(transparent, var(--surface)); pointer-events: none; }
+  .stage { display: grid; justify-items: center; gap: 22px; }
+  .stage .screen { width: 100%; }
+  .key { padding: 8px 14px; font: 600 17px var(--sans); color: var(--gold);
+    background: var(--bg); border: 1.5px solid var(--gold); border-radius: 9px; cursor: pointer; box-shadow: 0 3px 0 var(--gold); transition: transform .08s, box-shadow .08s; }
+  .key.down { transform: translateY(3px); box-shadow: 0 0 0 var(--gold); }
+
+  /* funzioni */
+  .feature { display: grid; grid-template-columns: 1.6fr 1fr; gap: 40px; align-items: center; padding: 56px 0; border-top: 1px solid var(--hairline); }
+  .feature:nth-of-type(even) .shot { order: 2; }
+  .feature h2 { margin: 0 0 12px; font-size: 28px; line-height: 1.2; letter-spacing: -.015em; }
+  .feature p { margin: 0 0 12px; color: var(--muted); max-width: 52ch; }
+  .feature p strong { color: var(--text); font-weight: 600; }
+
+  .why { display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px 48px; padding: 72px 0; border-top: 1px solid var(--hairline); }
+  .why > h2 { grid-column: 1 / -1; margin: 0; font-size: 28px; letter-spacing: -.015em; }
+  .why h3 { margin: 0 0 6px; font-size: 19px; color: var(--gold); }
+  .why p { margin: 0; color: var(--muted); max-width: 44ch; }
+
+  .install { padding: 72px 0; border-top: 1px solid var(--hairline); }
+  .install h2 { margin: 0 0 20px; font-size: 28px; letter-spacing: -.015em; }
+  .install ol { margin: 0; padding-left: 1.3em; max-width: 64ch; }
+  .install li { margin-bottom: 14px; padding-left: 6px; }
+  .install li::marker { color: var(--gold); font-weight: 700; }
+  pre { margin: 10px 0 0; padding: 12px 14px; overflow-x: auto; border-radius: 10px; background: var(--surface); border: 1px solid var(--hairline); }
+
+  footer { padding: 32px 0 48px; border-top: 1px solid var(--hairline); color: var(--muted); font-size: 14px; }
+  footer nav { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+
+  @media (max-width: 820px) {
+    .hero { grid-template-columns: 1fr; gap: 48px; padding: 48px 0 64px; }
+    .stage { max-width: 360px; }
+    .screen { height: 480px; }
+    .feature { grid-template-columns: 1fr; gap: 24px; padding: 40px 0; }
+    .feature:nth-of-type(even) .shot { order: 0; }
+    .why { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .screen img, .key { transition: none; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="hero">
+    <div>
+      <p class="wordmark">trove</p>
+      <h1>Everything you copy, found again.</h1>
+      <p class="lede">A clipboard history for macOS. Press <kbd>⇧⌘V</kbd> over any app, find what you copied by words, by meaning or by the text inside an image, and press <kbd>↩</kbd> to paste it.</p>
+      <div class="actions">
+        <a class="download" href="https://github.com/cannoloops/trove/releases/latest">Download for Mac</a>
+        <span class="req">Free and open source. macOS 26 on Apple silicon.</span>
+      </div>
+    </div>
+    <div class="stage">
+    <div class="screen closed" id="screen">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="screenshots/panel-side-dark.png">
+        <img src="screenshots/panel-side-light.png" alt="The Trove panel open on the left side of the screen, with recent clips">
+      </picture>
+    </div>
+    <button class="key" id="key" type="button" aria-label="Show the panel again">⇧⌘V</button>
+    </div>
+  </header>
+
+  <section class="feature">
+    <picture class="shot">
+      <source media="(prefers-color-scheme: dark)" srcset="screenshots/search-dark.png">
+      <img src="screenshots/search-light.png" alt="Typing receipt finds an electricity invoice by meaning and a screenshot by the text inside it" loading="lazy">
+    </picture>
+    <div>
+      <h2>Find it the way you remember it</h2>
+      <p>Trove keeps text, links, images, files and colors, with the app they came from. Search is typo-tolerant and understands meaning: “receipt” finds the invoice. Text inside screenshots is searchable too.</p>
+      <p>Filters narrow it down: <code>type:image</code>, <code>app:Safari</code>, <code>today</code>. All of it runs on your Mac, with Apple Intelligence when available.</p>
+    </div>
+  </section>
+
+  <section class="feature">
+    <picture class="shot">
+      <source media="(prefers-color-scheme: dark)" srcset="screenshots/keyboard-dark.png">
+      <img src="screenshots/keyboard-light.png" alt="The side panel with the second clip selected, next to the ⇧⌘V, arrow and return keys" loading="lazy">
+    </picture>
+    <div>
+      <h2>Paste without the mouse</h2>
+      <p>The panel slides in from the side you choose. Move with <kbd>↑</kbd> <kbd>↓</kbd>, press <kbd>↩</kbd> and the clip lands in the app you were using.</p>
+      <p><kbd>⇧↩</kbd> pastes plain text, or the recognized text of an image. <kbd>⌘1</kbd>…<kbd>⌘9</kbd> paste the first results, <kbd>Space</kbd> shows a preview.</p>
+    </div>
+  </section>
+
+  <section class="feature">
+    <picture class="shot">
+      <source media="(prefers-color-scheme: dark)" srcset="screenshots/clean-dark.png">
+      <img src="screenshots/clean-light.png" alt="Terminal output pasted with ⌥↩: leftovers removed, an API key, an IBAN and an email replaced by placeholders" loading="lazy">
+    </picture>
+    <div>
+      <h2><kbd>⌥↩</kbd> pastes the clean version</h2>
+      <p>Copied from a terminal? The bullets, tree lines and padding go away.</p>
+      <p>API keys, passwords, cards, IBANs, tax codes, emails and phone numbers become placeholders like <code>&lt;OPENAI_KEY_1&gt;</code>, so you can share a log without sharing the secrets in it.</p>
+    </div>
+  </section>
+
+  <section class="feature">
+    <picture class="shot">
+      <source media="(prefers-color-scheme: dark)" srcset="screenshots/agents-dark.png">
+      <img src="screenshots/agents-light.png" alt="A key pasted into claude.ai shown as a placeholder, and an image pasted into a terminal as a file path" loading="lazy">
+    </picture>
+    <div>
+      <h2>Safe in AI chats, handy in the terminal</h2>
+      <p>When Trove pastes into ChatGPT, Claude, Perplexity or Gemini, secrets are masked on their own. Press <kbd>⌘V</kbd> in those apps or their websites and Trove offers to hide what it recognizes.</p>
+      <p>In a terminal, a pasted image becomes a file path your coding agent can open.</p>
+    </div>
+  </section>
+
+  <section class="why">
+    <h2>What Trove does differently</h2>
+    <div>
+      <h3>It stays on your Mac</h3>
+      <p>No account and no cloud. History lives in your Library folder; backup to Google Drive is optional.</p>
+    </div>
+    <div>
+      <h3>Search that understands</h3>
+      <p>By meaning and inside images, computed on-device.</p>
+    </div>
+    <div>
+      <h3>Built for people who use AI</h3>
+      <p>Secrets and personal data are hidden before they end up in a chat, in the browser too.</p>
+    </div>
+    <div>
+      <h3>Free and open source</h3>
+      <p>MIT license. Read the code, file an issue, send a fix.</p>
+    </div>
+  </section>
+
+  <section class="install" id="install">
+    <h2>Install</h2>
+    <ol>
+      <li>Download <a href="https://github.com/cannoloops/trove/releases/latest">the latest Trove .dmg</a> and drag Trove to Applications.</li>
+      <li>Trove isn’t signed with an Apple Developer ID yet, so macOS blocks the first launch. Open it once, then click <strong>Open Anyway</strong> in System Settings › Privacy &amp; Security, or run:
+        <pre><code>xattr -dr com.apple.quarantine /Applications/Trove.app</code></pre></li>
+      <li>Allow <strong>Accessibility</strong> when asked: Trove needs it to paste into the app in front. A short tutorial walks you through the rest.</li>
+    </ol>
+  </section>
+</main>
+<footer class="wrap">
+  <nav>
+    <a href="https://github.com/cannoloops/trove">Source on GitHub</a>
+    <a href="https://github.com/cannoloops/trove/blob/main/docs/guide.md">User guide</a>
+    <a href="https://github.com/cannoloops/trove/releases">Releases</a>
+    <a href="https://github.com/cannoloops/trove/blob/main/LICENSE">MIT license</a>
+  </nav>
+</footer>
+<script>
+  // ⇧⌘V (o il tasto disegnato) fa rientrare il pannello, come nell'app
+  const screen = document.getElementById('screen'), key = document.getElementById('key')
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches
+  function open() {
+    key.classList.add('down')
+    setTimeout(() => key.classList.remove('down'), 140)
+    if (still) { screen.classList.remove('closed'); return }
+    screen.classList.add('closed')
+    setTimeout(() => screen.classList.remove('closed'), 220)
+  }
+  key.addEventListener('click', open)
+  addEventListener('keydown', e => {
+    if (e.metaKey && e.shiftKey && e.key.toLowerCase() === 'v') { e.preventDefault(); open() }
+  })
+  setTimeout(open, still ? 0 : 500)
+</script>
+</body>
+</html>
