@@ -10,5 +10,10 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Link di donazione invariati
+        run: |
+          test "$(cat .github/FUNDING.yml)" = "github: cannoloops" || { echo "FUNDING.yml modificato"; exit 1; }
+          bad=$(git grep -hoiE 'https?://[^ )"]*(sponsors|paypal|ko-fi|buymeacoffee|patreon|opencollective|liberapay)[^ )"]*' -- ':!.github/workflows' | grep -vx 'https://github.com/sponsors/cannoloops' || true)
+          test -z "$bad" || { echo "Link di donazione non autorizzati:"; echo "$bad"; exit 1; }
       - run: swift test
       - run: ./scripts/build.sh
