@@ -15,6 +15,8 @@ enum PasteGuard {
     /// I ⌘V simulati da Trove non devono far partire il popup.
     static var ignoreUntil = Date.distantPast
     private static var panel: NSPanel?
+    /// Ultimo tasto o clic visto: se arriva dopo il ⌘V, ⌘Z non annullerebbe più l'incolla.
+    private static var lastEvent = Date.distantPast
 
     /// `onWrite`: chiamato dopo aver scritto sul pasteboard, per non ricatturare la versione oscurata nella history.
     static func start(onWrite: @escaping () -> Void) {
@@ -25,21 +27,29 @@ enum PasteGuard {
 
     private static func handle(_ e: NSEvent, onWrite: @escaping () -> Void) {
         hide() // un tasto o un clic dopo l'incolla: ⌘Z non annullerebbe più l'incolla
+        lastEvent = Date()
         guard e.type == .keyDown, e.keyCode == 9, e.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
               Date() > ignoreUntil, Paster.redactForAI,
               let app = NSWorkspace.shared.frontmostApplication, let bid = app.bundleIdentifier,
               Paster.aiApps.contains(bid) || browsers.contains(bid),
               let text = NSPasteboard.general.string(forType: .string) else { return }
-        let r = Secrets.redact(text, pii: true)
-        guard !r.found.isEmpty else { return }
-        let ax = AXUIElementCreateApplication(app.processIdentifier)
+        let pid = app.processIdentifier
+        let ax = AXUIElementCreateApplication(pid)
         // Chromium costruisce l'albero AX (URL, cursore) solo se un client lo chiede
         AXUIElementSetAttributeValue(ax, "AXManualAccessibility" as CFString, kCFBooleanTrue)
         let change = NSPasteboard.general.changeCount
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { // a incolla avvenuto il cursore è dopo il testo
-            guard Paster.aiApps.contains(bid) || onAIHost(ax) else { return }
+        let started = Date()
+        Task {
+            // fuori dal main thread: un testo enorme non blocca Trove (né la cattura degli appunti)
+            let r = await Task.detached(priority: .userInitiated) { Secrets.redact(text, pii: true) }.value
+            guard !r.found.isEmpty else { return }
+            // a incolla avvenuto il cursore è dopo il testo
+            try? await Task.sleep(for: .seconds(max(0, 0.25 - Date().timeIntervalSince(started))))
+            guard lastEvent < started, Paster.aiApps.contains(bid) || onAIHost(ax) else { return }
             show(count: r.found.count, at: caret(ax) ?? fromCocoa(NSEvent.mouseLocation)) {
-                guard NSPasteboard.general.changeCount == change else { return }
+                // l'utente può aver cambiato app (o Spazio) con il popup aperto: ⌘Z e ⌘V finirebbero altrove
+                guard NSPasteboard.general.changeCount == change,
+                      NSWorkspace.shared.frontmostApplication?.processIdentifier == pid else { return }
                 let pb = NSPasteboard.general
                 pb.clearContents()
                 pb.setString(r.text, forType: .string) // resta negli appunti: i ⌘V successivi sono già oscurati
