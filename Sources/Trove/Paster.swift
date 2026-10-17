@@ -77,6 +77,7 @@ enum Paster {
     /// ⌘V verso l'app in primo piano.
     static func sendPaste() {
         guard isTrusted else { promptForAccessibility(); return }
+        PasteGuard.ignoreUntil = Date() + 1
         let src = CGEventSource(stateID: .combinedSessionState)
         for down in [true, false] {
             let e = CGEvent(keyboardEventSource: src, virtualKey: 9, keyDown: down) // 9 = V

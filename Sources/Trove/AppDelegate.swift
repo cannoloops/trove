@@ -36,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if isNew { enrich([id]) }
         }
         monitor.start()
+        PasteGuard.start { [weak self] in self?.monitor.skipCurrent() }
 
         panel = PanelController(model: model)
         panel.onPaste = { [weak self] in self?.paste($0, mode: $1) }
