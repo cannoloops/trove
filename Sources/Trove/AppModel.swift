@@ -90,6 +90,7 @@ final class AppModel: ObservableObject {
     func delete(_ item: ClipItem) {
         let store = store
         Task.detached(priority: .userInitiated) { store.delete(item.id) }
+        if let b = item.blobPath { try? FileManager.default.removeItem(at: AgentPaste.cachedImage(b, cacheDir: Paster.cacheDir)) }
         corpus.removeAll { $0.id == item.id }
         results.removeAll { $0.id == item.id }
         totalCount = corpus.count

@@ -9,12 +9,12 @@ public enum Enricher {
     public static func enrich(_ item: ClipItem, store: Store) async {
         var ocr: String?
         var title: String?
-        if item.kind == .image, let blob = item.blobPath,
-           let src = CGImageSourceCreateWithURL(store.blobsDir.appendingPathComponent(blob) as CFURL, nil),
+        if item.kind == .image, let url = item.blobPath.flatMap(store.blobURL),
+           let src = CGImageSourceCreateWithURL(url as CFURL, nil),
            let cg = CGImageSourceCreateImageAtIndex(src, 0, nil) {
             ocr = try? await self.ocr(cg)
         }
-        if item.kind == .link, let url = URL(string: item.text.trimmingCharacters(in: .whitespacesAndNewlines)) {
+        if item.kind == .link, let url = titleURL(for: item.text, enabled: UserDefaults.standard.bool(forKey: "fetchLinkTitles")) {
             title = await linkTitle(url)
         }
         var full = item
@@ -34,6 +34,14 @@ public enum Enricher {
         req.usesLanguageCorrection = true
         let obs = try await req.perform(on: image)
         return obs.compactMap { $0.topCandidates(1).first?.string }.joined(separator: "\n")
+    }
+
+    /// Aprire un link copiato rivela l'IP al sito e può consumare link monouso: solo su richiesta dell'utente,
+    /// e mai per URL con credenziali o query (token, firme, reset password).
+    static func titleURL(for text: String, enabled: Bool) -> URL? {
+        guard enabled, let u = URL(string: text.trimmingCharacters(in: .whitespacesAndNewlines)),
+              u.user == nil, u.password == nil, u.query == nil else { return nil }
+        return u
     }
 
     @MainActor

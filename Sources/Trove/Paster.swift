@@ -30,7 +30,7 @@ enum Paster {
 
         switch item.kind {
         case .image:
-            guard let blob = item.blobPath.map({ store.blobsDir.appendingPathComponent($0) }) else { return 0 }
+            guard let blob = item.blobPath.flatMap(store.blobURL) else { return 0 }
             // agenti e terminali leggono file, non immagini dal pasteboard
             if mode == .agent || toTerminal, let path = try? AgentPaste.imagePath(blob: blob, cacheDir: cacheDir) {
                 pb.setString(path.path, forType: .string)

@@ -82,6 +82,8 @@
 "Ultimo backup" = "Last backup";
 "mai" = "never";
 "Esegui backup ora" = "Back Up Now";
+"Scarica il titolo dei link copiati" = "Fetch titles of copied links";
+"Trove apre il link per leggerne il titolo: il sito vede il tuo indirizzo IP. I link con parametri (?…) o credenziali non vengono mai aperti." = "Trove opens the link to read its title, so the site sees your IP address. Links with parameters (?…) or credentials are never opened.";
 "Ripristina dal backup…" = "Restore from Backup…";
 "Google Drive per desktop non trovato. Installalo e accedi: Trove salverà la history in Il mio Drive/Trove." = "Google Drive for desktop not found. Install it and sign in: Trove will save your history to My Drive/Trove.";
 "History" = "History";

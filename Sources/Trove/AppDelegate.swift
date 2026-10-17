@@ -47,7 +47,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settings.onCombo = { [weak self] c in self?.hotKey.register(c) ?? false }
         settings.onBackup = { [weak self] in self?.backupNow(manual: true) }
         settings.onRestore = { [weak self] in self?.restore() }
-        settings.onClear = { [weak self] in self?.store.deleteAll(); self?.model.reload() }
+        settings.onClear = { [weak self] in
+            self?.store.deleteAll(); self?.model.reload()
+            try? FileManager.default.removeItem(at: Paster.cacheDir)
+        }
 
         setupStatusItem()
         if !Paster.isTrusted { Paster.promptForAccessibility() }
@@ -67,7 +70,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.backupIfDue() }
+            AgentPaste.prune(cacheDir: Paster.cacheDir)
         }
+        AgentPaste.prune(cacheDir: Paster.cacheDir)
         DispatchQueue.main.asyncAfter(deadline: .now() + 30) { [weak self] in self?.backupIfDue() }
     }
 
@@ -166,7 +171,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/bin/sh")
         // aspetta che questo processo sia davvero terminato prima di riaprire l'app
-        p.arguments = ["-c", "while kill -0 \(ProcessInfo.processInfo.processIdentifier) 2>/dev/null; do sleep 0.2; done; /usr/bin/open \"\(Bundle.main.bundlePath)\""]
+        p.arguments = Backup.relaunchArguments(pid: ProcessInfo.processInfo.processIdentifier, appPath: Bundle.main.bundlePath)
         try? p.run()
         NSApp.terminate(nil)
     }

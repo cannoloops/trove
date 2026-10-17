@@ -30,6 +30,12 @@ public final class Store: @unchecked Sendable {
         """)
     }
 
+    /// URL di un blob, solo se il nome è un file dentro `blobs/`: un DB ripristinato non deve puntare altrove (`../`).
+    public func blobURL(_ name: String) -> URL? {
+        guard !name.isEmpty, !name.contains("/"), name != ".", name != ".." else { return nil }
+        return blobsDir.appendingPathComponent(name)
+    }
+
     deinit { sqlite3_close(db) }
 
     public func close() { lock.withLock { sqlite3_close(db); db = nil } }
@@ -79,7 +85,7 @@ public final class Store: @unchecked Sendable {
 
     public func delete(_ id: Int64) {
         lock.withLock {
-            if let blob = get(id)?.blobPath { try? FileManager.default.removeItem(at: blobsDir.appendingPathComponent(blob)) }
+            if let url = get(id)?.blobPath.flatMap(blobURL) { try? FileManager.default.removeItem(at: url) }
             run("DELETE FROM items WHERE id=?", id)
             run("DELETE FROM fts WHERE rowid=?", id)
         }

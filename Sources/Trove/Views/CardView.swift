@@ -126,7 +126,7 @@ struct ItemBody: View {
 
     private var image: some View {
         ZStack(alignment: .bottomLeading) {
-            ThumbnailView(url: item.blobPath.map { store.blobsDir.appendingPathComponent($0) }, maxPixel: compact ? 520 : 1600, fill: compact)
+            ThumbnailView(url: item.blobPath.flatMap(store.blobURL), maxPixel: compact ? 520 : 1600, fill: compact)
             if compact, let ocr = item.ocr, !ocr.isEmpty {
                 Label(ocr.replacingOccurrences(of: "\n", with: " "), systemImage: "text.viewfinder")
                     .font(Theme.ui(10, .medium)).lineLimit(1)

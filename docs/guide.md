@@ -38,7 +38,7 @@ Browser chats (chatgpt.com and so on) are not covered by automatic masking: use 
 
 Trove can back up to **Google Drive for desktop**. Install it and sign in, then Trove writes to `My Drive/Trove` (the folder name follows your Drive language) and Drive syncs it.
 
-- **Automatic backup** runs at most once every 24 hours (Settings › Backup to Google Drive).
+- **Automatic backup** is off by default; when enabled it runs at most once every 24 hours (Settings › Backup to Google Drive). The backup is not encrypted: it contains your whole history, secrets included.
 - **Back Up Now** is in the menu bar icon and in Settings.
 - **Restore from Backup…** replaces the history on this Mac with the backup and restarts Trove. The backup is checked before anything local is touched.
 
@@ -51,7 +51,9 @@ Trove has no account, no server and no analytics. History, OCR and the semantic 
 - `~/Library/Application Support/Trove`: database and images
 - `~/Library/Caches/io.github.cannoloops.trove`: temporary files for pasting images as paths
 
-The only network traffic is the update check (GitHub Releases) and, if you enable it, Google Drive syncing the backup folder.
+The only network traffic is the update check (GitHub Releases) and, if you enable them, Google Drive syncing the backup folder and **Settings › History › Fetch titles of copied links** (Trove then opens copied links to read their title; links with `?…` parameters or credentials are never opened).
+
+Images pasted into a terminal are copied to the cache folder below and deleted after 24 hours, when the item is deleted, or when you clear the history.
 
 ## Troubleshooting
 

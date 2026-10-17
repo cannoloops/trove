@@ -10,10 +10,13 @@ final class SettingsModel: ObservableObject {
     @Published var hotKeyError: String?
     @Published var launchAtLogin = SMAppService.mainApp.status == .enabled
     @Published var loginError: String?
-    @Published var autoBackup = UserDefaults.standard.object(forKey: "autoBackup") as? Bool ?? true {
+    @Published var autoBackup = Backup.autoEnabled() {
         didSet { UserDefaults.standard.set(autoBackup, forKey: "autoBackup") }
     }
     @Published var redactForAI = Paster.redactForAI { didSet { UserDefaults.standard.set(redactForAI, forKey: "redactForAI") } }
+    @Published var fetchLinkTitles = UserDefaults.standard.bool(forKey: "fetchLinkTitles") {
+        didSet { UserDefaults.standard.set(fetchLinkTitles, forKey: "fetchLinkTitles") }
+    }
     @Published var backupStatus: String?
     @Published var lastBackup: Date?
     @Published var trusted = Paster.isTrusted
@@ -123,6 +126,8 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
                 LabeledContent("Conservazione", value: String(localized: "Per sempre"))
+                Toggle("Scarica il titolo dei link copiati", isOn: $s.fetchLinkTitles)
+                    .help(String(localized: "Trove apre il link per leggerne il titolo: il sito vede il tuo indirizzo IP. I link con parametri (?…) o credenziali non vengono mai aperti."))
                 Button("Cancella tutta la history…", role: .destructive) { confirmClear = true }
             }
         }

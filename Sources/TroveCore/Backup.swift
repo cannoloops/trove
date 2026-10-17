@@ -21,6 +21,14 @@ public enum Backup {
         return nil
     }
 
+    /// Il backup automatico manda la history (segreti compresi) su Google: solo se l'utente l'ha attivato.
+    public static func autoEnabled(_ d: UserDefaults = .standard) -> Bool { d.object(forKey: "autoBackup") as? Bool ?? false }
+
+    /// Argomenti per `/bin/sh` che riaprono l'app dopo l'uscita di `pid`; il percorso è un argomento, mai interpolato nello script.
+    public static func relaunchArguments(pid: Int32, appPath: String) -> [String] {
+        ["-c", #"while kill -0 "$1" 2>/dev/null; do sleep 0.2; done; /usr/bin/open "$2""#, "sh", String(pid), appPath]
+    }
+
     @discardableResult
     public static func runToDrive(store: Store, home: URL = FileManager.default.homeDirectoryForCurrentUser) throws -> URL {
         guard let dest = driveFolder(home: home) else { throw BackupError.driveNotFound }
