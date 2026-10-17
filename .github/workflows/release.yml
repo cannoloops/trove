@@ -8,7 +8,10 @@ jobs:
   release:
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Versione dal tag
+        # solo vX.Y.Z: il valore finisce in Info.plist, nei nomi file e negli URL dell'appcast
+        run: '[[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "tag non valido: $GITHUB_REF_NAME"; exit 1; }'
       - run: swift test
       - name: Identità di firma
         # certificato self-signed fisso: la firma resta uguale tra le versioni e macOS non revoca l'Accessibilità
@@ -16,11 +19,11 @@ jobs:
           SIGN_CERT_P12: ${{ secrets.SIGN_CERT_P12 }}
           SIGN_CERT_PASSWORD: ${{ secrets.SIGN_CERT_PASSWORD }}
         run: |
-          KC=$RUNNER_TEMP/sign.keychain-db; PW=$(openssl rand -hex 16)
+          KC=$RUNNER_TEMP/sign.keychain-db; PW=$(openssl rand -hex 16); P12=$RUNNER_TEMP/sign.p12
+          trap 'rm -f "$P12"' EXIT  # anche se l'import fallisce
           security create-keychain -p $PW $KC && security set-keychain-settings $KC && security unlock-keychain -p $PW $KC
-          printf '%s' "$SIGN_CERT_P12" | base64 -d > $RUNNER_TEMP/sign.p12
-          security import $RUNNER_TEMP/sign.p12 -k $KC -P "$SIGN_CERT_PASSWORD" -T /usr/bin/codesign
-          rm $RUNNER_TEMP/sign.p12
+          printf '%s' "$SIGN_CERT_P12" | base64 -d > $P12
+          security import $P12 -k $KC -P "$SIGN_CERT_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $PW $KC >/dev/null
           security list-keychains -d user -s $KC $(security list-keychains -d user | tr -d '"')
       - name: dmg + appcast
@@ -35,3 +38,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "$GITHUB_REF_NAME" build/release/*.dmg build/release/appcast.xml --generate-notes
+      - name: Rimuovi il keychain di firma
+        if: always()
+        run: security delete-keychain "$RUNNER_TEMP/sign.keychain-db" 2>/dev/null || true
