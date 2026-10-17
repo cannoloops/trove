@@ -387,7 +387,7 @@ private struct WhyScene: View {
         ("lock.laptopcomputer", "Resta sul tuo Mac", "Niente account né cloud. Il backup su Google Drive è facoltativo."),
         ("sparkle.magnifyingglass", "Una ricerca che capisce", "Per significato e dentro le immagini, on-device con Apple Intelligence."),
         ("wand.and.sparkles", "Pensato per chi usa l’AI", "Segreti e dati personali oscurati prima di finire in una chat, anche nel browser."),
-        ("chevron.left.forwardslash.chevron.right", "Gratis e open source", "Licenza MIT: il codice è su GitHub, da leggere e migliorare."),
+        ("chevron.left.forwardslash.chevron.right", "Gratis e open source", "Licenza GPL-3.0: il codice è su GitHub, da leggere e migliorare."),
     ]
 
     var body: some View {

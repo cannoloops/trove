@@ -179,7 +179,7 @@
 "Pensato per chi usa l’AI" = "Built for people who use AI";
 "Segreti e dati personali oscurati prima di finire in una chat, anche nel browser." = "Secrets and personal data hidden before they end up in a chat, in the browser too.";
 "Gratis e open source" = "Free and open source";
-"Licenza MIT: il codice è su GitHub, da leggere e migliorare." = "MIT license: the code is on GitHub to read and improve.";
+"Licenza GPL-3.0: il codice è su GitHub, da leggere e migliorare." = "GPL-3.0 license: the code is on GitHub to read and improve.";
 
 /* Testo troppo lungo per la redazione */
 "Testo molto lungo: controllato solo il primo milione di caratteri" = "Very long text: only the first million characters were checked";

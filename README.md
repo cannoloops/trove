@@ -118,4 +118,4 @@ If Trove saves you time, you can [sponsor its development](https://github.com/sp
 
 ## License
 
-[MIT](LICENSE)
+[GPL-3.0](LICENSE)
