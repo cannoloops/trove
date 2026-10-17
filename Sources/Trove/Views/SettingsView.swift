@@ -34,10 +34,10 @@ final class SettingsModel: ObservableObject {
         do {
             if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
             loginError = nil
-        } catch { loginError = String(localized: "Non riesco a cambiare l’avvio al login: \(error.localizedDescription)") }
+        } catch { loginError = String(localized: "Impossibile modificare l’apertura al login: \(error.localizedDescription)") }
         launchAtLogin = SMAppService.mainApp.status == .enabled
         if on, SMAppService.mainApp.status == .requiresApproval {
-            loginError = String(localized: "Approva Trove in Impostazioni di Sistema › Generali › Elementi di login.")
+            loginError = String(localized: "Consenti Trove in Impostazioni di Sistema › Generali › Elementi login ed estensioni.")
         }
     }
 
@@ -49,7 +49,7 @@ final class SettingsModel: ObservableObject {
         monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] e in
             guard let self else { return e }
             if e.keyCode == 53 { self.stopRecording(); return nil } // esc annulla
-            guard let c = HotKey.Combo(event: e) else { self.hotKeyError = String(localized: "Usa almeno ⌘, ⌥ o ⌃ insieme a un tasto."); return nil }
+            guard let c = HotKey.Combo(event: e) else { self.hotKeyError = String(localized: "Combina un tasto con ⌘ ⌥ o ⌃."); return nil }
             if self.onCombo(c) { self.combo = c; c.save() } else { self.hotKeyError = String(localized: "\(c.display) è già usata da un’altra app.") }
             self.stopRecording()
             return nil
@@ -90,18 +90,18 @@ struct SettingsView: View {
                     Text("A sinistra").tag(PanelEdge.left)
                     Text("A destra").tag(PanelEdge.right)
                 }
-                Picker("Tema", selection: $appearance) {
-                    Text("Sistema").tag("system")
+                Picker("Aspetto", selection: $appearance) {
+                    Text("Automatico").tag("system")
                     Text("Chiaro").tag("light")
                     Text("Scuro").tag("dark")
                 }
                 .onChange(of: appearance) { _, v in Theme.applyAppearance(v) }
-                Toggle("Avvia Trove al login", isOn: Binding(get: { s.launchAtLogin }, set: { s.setLogin($0) }))
+                Toggle("Apri Trove al login", isOn: Binding(get: { s.launchAtLogin }, set: { s.setLogin($0) }))
                 if let e = s.loginError { Text(e).foregroundStyle(.orange).font(.caption) }
                 LabeledContent("Incolla nell’app attiva") {
-                    if s.trusted { Label("Permesso concesso", systemImage: "checkmark.circle.fill").foregroundStyle(.green) }
+                    if s.trusted { Label("Autorizzato", systemImage: "checkmark.circle.fill").foregroundStyle(.green) }
                     else {
-                        Button("Concedi accesso Accessibilità") {
+                        Button("Autorizza in Accessibilità…") {
                             Paster.promptForAccessibility()
                             NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
                         }
@@ -110,9 +110,9 @@ struct SettingsView: View {
                 LabeledContent("Tutorial") { Button("Rivedi il tutorial", action: s.onTutorial) }
             } header: { Label("Generale", systemImage: "gearshape") }
             Section {
-                Toggle("Nascondi i segreti nelle chat AI", isOn: $s.redactForAI)
+                Toggle("Oscura i segreti nelle chat AI", isOn: $s.redactForAI)
             } header: { Label("AI e agenti", systemImage: "sparkles") } footer: {
-                Text("In ChatGPT, Claude, Perplexity e Gemini chiavi API, token, password, carte e IBAN diventano segnaposto come <OPENAI_KEY_1>, con un avviso. Nei terminali ↩ incolla com’è; ⌥↩ incolla ovunque la versione pulita e senza segreti. Le immagini incollate in un terminale diventano il percorso del file.")
+                Text("Quando incolli in ChatGPT, Claude, Perplexity o Gemini, chiavi API, token, password, carte e IBAN vengono sostituiti da segnaposto come <OPENAI_KEY_1> e compare un avviso. Nei terminali ↩ incolla il testo così com’è. ⌥↩ incolla in qualsiasi app la versione pulita, senza segreti. Le immagini incollate in un terminale diventano il percorso del file.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section {
@@ -126,29 +126,29 @@ struct SettingsView: View {
                         Text(s.lastBackup.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? String(localized: "mai"))
                     }
                     HStack {
-                        Button("Esegui backup ora", action: s.onBackup)
+                        Button("Esegui backup adesso", action: s.onBackup)
                         Button("Ripristina dal backup…") { confirmRestore = true }.disabled(s.lastBackup == nil)
                     }
                     if let st = s.backupStatus { Text(st).font(.caption).foregroundStyle(.secondary) }
                 } else {
-                    Text("Google Drive per desktop non trovato. Installalo e accedi: Trove salverà la history in Il mio Drive/Trove.")
+                    Text("Google Drive per desktop non trovato. Installalo ed esegui l’accesso: Trove salverà la cronologia nella cartella Il mio Drive/Trove.")
                         .foregroundStyle(.secondary)
                 }
             } header: { Label("Backup su Google Drive", systemImage: "externaldrive.badge.icloud") }
             Section {
                 LabeledContent("Elementi salvati", value: "\(app.totalCount)")
                 LabeledContent("Ricerca per significato") {
-                    Text(SemanticTagger.isAvailable ? String(localized: "Attiva (Apple Intelligence on-device)") : String(localized: "Solo embedding locali: Apple Intelligence non disponibile"))
+                    Text(SemanticTagger.isAvailable ? String(localized: "Attiva (Apple Intelligence, sul dispositivo)") : String(localized: "Solo modello locale: Apple Intelligence non disponibile"))
                         .foregroundStyle(.secondary)
                 }
                 LabeledContent("Conservazione", value: String(localized: "Per sempre"))
-                Toggle("Scarica il titolo dei link copiati", isOn: $s.fetchLinkTitles)
+                Toggle("Mostra il titolo dei link copiati", isOn: $s.fetchLinkTitles)
                     .help(String(localized: "Trove apre il link per leggerne il titolo: il sito vede il tuo indirizzo IP. I link con parametri (?…) o credenziali non vengono mai aperti."))
-                Button("Cancella tutta la history…", role: .destructive) { confirmClear = true }
-            } header: { Label("History", systemImage: "clock.arrow.circlepath") }
+                Button("Cancella cronologia…", role: .destructive) { confirmClear = true }
+            } header: { Label("Cronologia", systemImage: "clock.arrow.circlepath") }
             Section {
                 Link("Sostieni lo sviluppo di Trove", destination: URL(string: "https://github.com/sponsors/cannoloops")!)
-            } header: { Label("Supporta Trove", systemImage: "heart") }
+            } header: { Label("Sostieni Trove", systemImage: "heart") }
         }
         .formStyle(.grouped)
         .frame(width: 560)
@@ -157,10 +157,10 @@ struct SettingsView: View {
         .alert("Ripristinare il backup?", isPresented: $confirmRestore) {
             Button("Ripristina e riavvia", role: .destructive, action: s.onRestore)
             Button("Annulla", role: .cancel) {}
-        } message: { Text("La history attuale su questo Mac verrà sostituita da quella del backup.") }
-        .alert("Cancellare tutta la history?", isPresented: $confirmClear) {
+        } message: { Text("La cronologia su questo Mac verrà sostituita da quella del backup.") }
+        .alert("Cancellare tutta la cronologia?", isPresented: $confirmClear) {
             Button("Cancella", role: .destructive, action: s.onClear)
             Button("Annulla", role: .cancel) {}
-        } message: { Text("Gli elementi locali vengono eliminati. I backup su Google Drive restano.") }
+        } message: { Text("Gli elementi su questo Mac verranno eliminati. I backup su Google Drive non verranno modificati.") }
     }
 }

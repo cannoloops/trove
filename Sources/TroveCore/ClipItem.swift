@@ -6,7 +6,7 @@ public enum ClipKind: String, CaseIterable, Sendable {
     public var label: String {
         switch self {
         case .text: String(localized: "Testo")
-        case .richText: String(localized: "Rich text")
+        case .richText: String(localized: "Testo formattato")
         case .link: String(localized: "Link")
         case .image: String(localized: "Immagine")
         case .file: String(localized: "File")

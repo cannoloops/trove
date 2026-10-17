@@ -15,7 +15,7 @@ struct PanelView: View {
     @AppStorage("panelEdge") private var edge = PanelEdge.left
 
     private let filters: [(String, ClipKind?)] = [
-        (String(localized: "Tutto"), nil), (String(localized: "Testo"), .text), (String(localized: "Rich"), .richText), (String(localized: "Link"), .link),
+        (String(localized: "Tutto"), nil), (String(localized: "Testo"), .text), (String(localized: "Formattato"), .richText), (String(localized: "Link"), .link),
         (String(localized: "Immagini"), .image), (String(localized: "File"), .file), (String(localized: "Colori"), .color),
     ]
 
@@ -58,7 +58,7 @@ struct PanelView: View {
     private var searchField: some View {
             HStack(spacing: 6) {
                 Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                TextField("Cerca  ·  type:image  app:Safari  oggi", text: $model.query)
+                TextField("Cerca  ·  tipo:immagine  app:Safari  oggi", text: $model.query)
                     .textFieldStyle(.plain)
                     .font(Theme.ui(14))
                     .focused($searchFocused)
@@ -179,11 +179,11 @@ struct PanelView: View {
 
     @ViewBuilder private var emptyState: some View {
         if model.totalCount == 0 {
-            ContentUnavailableView("Ancora niente", systemImage: "clipboard",
+            ContentUnavailableView("Nessun elemento", systemImage: "clipboard",
                                    description: Text("Copia qualcosa con ⌘C: comparirà qui."))
         } else {
             ContentUnavailableView("Nessun risultato per “\(model.query)”", systemImage: "magnifyingglass",
-                                   description: Text("La ricerca guarda testo, testo nelle immagini e significato. Prova parole diverse o togli i filtri."))
+                                   description: Text("La ricerca considera il testo, anche nelle immagini, e il significato. Prova altre parole o rimuovi i filtri."))
         }
     }
 }

@@ -2,13 +2,13 @@
 
 /* Kinds and filters */
 "Testo" = "Text";
-"Rich text" = "Rich text";
+"Testo formattato" = "Rich text";
 "Link" = "Link";
 "Immagine" = "Image";
 "File" = "File";
 "Colore" = "Color";
 "Tutto" = "All";
-"Rich" = "Rich";
+"Formattato" = "Rich";
 "Immagini" = "Images";
 "Colori" = "Colors";
 
@@ -27,7 +27,7 @@
 "+ altri %lld" = "+ %lld more";
 
 /* Panel */
-"Cerca  ·  type:image  app:Safari  oggi" = "Search  ·  type:image  app:Safari  today";
+"Cerca  ·  tipo:immagine  app:Safari  oggi" = "Search  ·  type:image  app:Safari  today";
 "anche per significato" = "also by meaning";
 "Risultati anche per significato, oltre che per parole" = "Results by meaning as well as by words";
 "1 elemento" = "1 item";
@@ -38,8 +38,8 @@
 "Impostazioni" = "Settings";
 "Incolla" = "Paste";
 "Incolla come testo semplice" = "Paste as Plain Text";
-"Tema" = "Appearance";
-"Sistema" = "System";
+"Aspetto" = "Appearance";
+"Automatico" = "Auto";
 "Chiaro" = "Light";
 "Scuro" = "Dark";
 "Incolla solo il testo dell’immagine" = "Paste Only the Image Text";
@@ -57,10 +57,10 @@
 "anteprima" = "preview";
 "elimina" = "delete";
 "chiudi" = "close";
-"Ancora niente" = "Nothing yet";
+"Nessun elemento" = "Nothing yet";
 "Copia qualcosa con ⌘C: comparirà qui." = "Copy something with ⌘C and it will show up here.";
 "Nessun risultato per “%@”" = "No results for “%@”";
-"La ricerca guarda testo, testo nelle immagini e significato. Prova parole diverse o togli i filtri." = "Search looks at text, text in images and meaning. Try different words or remove the filters.";
+"La ricerca considera il testo, anche nelle immagini, e il significato. Prova altre parole o rimuovi i filtri." = "Search looks at text, text in images and meaning. Try different words or remove the filters.";
 
 /* Preview */
 "da %@" = "from %@";
@@ -68,66 +68,66 @@
 "per agenti, senza segreti" = "for agents, no secrets";
 
 /* Settings */
-"Non riesco a cambiare l’avvio al login: %@" = "Can’t change launch at login: %@";
-"Approva Trove in Impostazioni di Sistema › Generali › Elementi di login." = "Approve Trove in System Settings › General › Login Items & Extensions.";
-"Usa almeno ⌘, ⌥ o ⌃ insieme a un tasto." = "Use at least ⌘, ⌥ or ⌃ together with a key.";
+"Impossibile modificare l’apertura al login: %@" = "Can’t change launch at login: %@";
+"Consenti Trove in Impostazioni di Sistema › Generali › Elementi login ed estensioni." = "Approve Trove in System Settings › General › Login Items & Extensions.";
+"Combina un tasto con ⌘ ⌥ o ⌃." = "Use at least ⌘, ⌥ or ⌃ together with a key.";
 "%@ è già usata da un’altra app." = "%@ is already used by another app.";
 "Generale" = "General";
 "Apri Trove" = "Open Trove";
 "Premi la nuova scorciatoia…" = "Press the new shortcut…";
 "Ripristina ⇧⌘V" = "Reset to ⇧⌘V";
-"Avvia Trove al login" = "Launch Trove at login";
+"Apri Trove al login" = "Launch Trove at login";
 "Incolla nell’app attiva" = "Paste into the active app";
-"Permesso concesso" = "Permission granted";
-"Concedi accesso Accessibilità" = "Grant Accessibility access";
-"Nascondi i segreti nelle chat AI" = "Hide secrets in AI chats";
+"Autorizzato" = "Permission granted";
+"Autorizza in Accessibilità…" = "Grant Accessibility access";
+"Oscura i segreti nelle chat AI" = "Hide secrets in AI chats";
 "AI e agenti" = "AI and agents";
-"In ChatGPT, Claude, Perplexity e Gemini chiavi API, token, password, carte e IBAN diventano segnaposto come <OPENAI_KEY_1>, con un avviso. Nei terminali ↩ incolla com’è; ⌥↩ incolla ovunque la versione pulita e senza segreti. Le immagini incollate in un terminale diventano il percorso del file." = "In ChatGPT, Claude, Perplexity and Gemini, API keys, tokens, passwords, cards and IBANs become placeholders like <OPENAI_KEY_1>, with a notice. In terminals ↩ pastes as is; ⌥↩ pastes the cleaned version without secrets anywhere. Images pasted into a terminal become the file path.";
+"Quando incolli in ChatGPT, Claude, Perplexity o Gemini, chiavi API, token, password, carte e IBAN vengono sostituiti da segnaposto come <OPENAI_KEY_1> e compare un avviso. Nei terminali ↩ incolla il testo così com’è. ⌥↩ incolla in qualsiasi app la versione pulita, senza segreti. Le immagini incollate in un terminale diventano il percorso del file." = "In ChatGPT, Claude, Perplexity and Gemini, API keys, tokens, passwords, cards and IBANs become placeholders like <OPENAI_KEY_1>, with a notice. In terminals ↩ pastes as is; ⌥↩ pastes the cleaned version without secrets anywhere. Images pasted into a terminal become the file path.";
 "Backup su Google Drive" = "Backup to Google Drive";
 "Cartella" = "Folder";
 "Backup automatico ogni 24 ore" = "Automatic backup every 24 hours";
 "Ultimo backup" = "Last backup";
 "mai" = "never";
-"Esegui backup ora" = "Back Up Now";
-"Scarica il titolo dei link copiati" = "Fetch titles of copied links";
+"Esegui backup adesso" = "Back Up Now";
+"Mostra il titolo dei link copiati" = "Show titles of copied links";
 "Trove apre il link per leggerne il titolo: il sito vede il tuo indirizzo IP. I link con parametri (?…) o credenziali non vengono mai aperti." = "Trove opens the link to read its title, so the site sees your IP address. Links with parameters (?…) or credentials are never opened.";
 "Ripristina dal backup…" = "Restore from Backup…";
-"Google Drive per desktop non trovato. Installalo e accedi: Trove salverà la history in Il mio Drive/Trove." = "Google Drive for desktop not found. Install it and sign in: Trove will save your history to My Drive/Trove.";
-"History" = "History";
+"Google Drive per desktop non trovato. Installalo ed esegui l’accesso: Trove salverà la cronologia nella cartella Il mio Drive/Trove." = "Google Drive for desktop not found. Install it and sign in: Trove will save your history to My Drive/Trove.";
+"Cronologia" = "History";
 "Elementi salvati" = "Saved items";
 "Ricerca per significato" = "Search by meaning";
-"Attiva (Apple Intelligence on-device)" = "On (on-device Apple Intelligence)";
-"Solo embedding locali: Apple Intelligence non disponibile" = "Local embeddings only: Apple Intelligence unavailable";
+"Attiva (Apple Intelligence, sul dispositivo)" = "On (on-device Apple Intelligence)";
+"Solo modello locale: Apple Intelligence non disponibile" = "Local model only: Apple Intelligence unavailable";
 "Conservazione" = "Retention";
 "Per sempre" = "Forever";
-"Cancella tutta la history…" = "Delete All History…";
+"Cancella cronologia…" = "Delete All History…";
 "Sostieni lo sviluppo di Trove" = "Sponsor Trove's development";
-"Supporta Trove" = "Support Trove";
+"Sostieni Trove" = "Support Trove";
 "Ripristinare il backup?" = "Restore the backup?";
 "Ripristina e riavvia" = "Restore and Relaunch";
 "Annulla" = "Cancel";
-"La history attuale su questo Mac verrà sostituita da quella del backup." = "The current history on this Mac will be replaced by the backup’s.";
-"Cancellare tutta la history?" = "Delete all history?";
+"La cronologia su questo Mac verrà sostituita da quella del backup." = "The current history on this Mac will be replaced by the backup’s.";
+"Cancellare tutta la cronologia?" = "Delete all history?";
 "Cancella" = "Delete";
-"Gli elementi locali vengono eliminati. I backup su Google Drive restano." = "Local items will be deleted. Backups on Google Drive are kept.";
+"Gli elementi su questo Mac verranno eliminati. I backup su Google Drive non verranno modificati." = "Items on this Mac will be deleted. Backups on Google Drive won’t be changed.";
 
 /* App delegate */
-"Trove non riesce ad aprire la history" = "Trove can’t open the history";
+"Impossibile aprire la cronologia di Trove" = "Can’t open Trove’s history";
 "%@\n\nCartella: %@" = "%1$@\n\nFolder: %2$@";
-"1 segreto nascosto con un segnaposto" = "1 secret hidden with a placeholder";
-"%lld segreti nascosti con segnaposto" = "%lld secrets hidden with placeholders";
+"1 segreto oscurato con un segnaposto" = "1 secret hidden with a placeholder";
+"%lld segreti oscurati con segnaposto" = "%lld secrets hidden with placeholders";
 "⌥↩ incolla sempre la versione senza segreti." = "⌥↩ always pastes the version without secrets.";
-"Per incollare l’originale disattiva l’opzione in Impostazioni › AI e agenti." = "To paste the original, turn the option off in Settings › AI and agents.";
+"Per incollare l’originale, disattiva l’opzione in Impostazioni › AI e agenti." = "To paste the original, turn the option off in Settings › AI and agents.";
 "Oscurare 1 dato sensibile?" = "Hide 1 sensitive item?";
 "Oscurare %lld dati sensibili?" = "Hide %lld sensitive items?";
 "Oscura" = "Hide";
 "No" = "No";
 "Backup in corso…" = "Backing up…";
-"Backup completato in %@." = "Backup completed in %@.";
+"Backup salvato in %@." = "Backup saved to %@.";
 "Google Drive per desktop non trovato." = "Google Drive for desktop not found.";
 "Backup non riuscito: %@" = "Backup failed: %@";
-"Il backup su Drive non è leggibile (forse non ancora scaricato): la history locale è intatta." = "The backup on Drive can’t be read (maybe not downloaded yet): your local history is intact.";
-"Ripristino non riuscito: %@. La history locale è intatta." = "Restore failed: %@. Your local history is intact.";
+"Impossibile leggere il backup su Drive (forse non è ancora stato scaricato). La cronologia su questo Mac non è stata modificata." = "Can’t read the backup on Drive (maybe it isn’t downloaded yet). The history on this Mac hasn’t been changed.";
+"Ripristino non riuscito: %@. La cronologia su questo Mac non è stata modificata." = "Restore failed: %@. The history on this Mac hasn’t been changed.";
 "Ripristino non riuscito" = "Restore failed";
 "Impostazioni…" = "Settings…";
 "Controlla aggiornamenti…" = "Check for Updates…";
@@ -140,46 +140,47 @@
 "A destra" = "Right";
 
 /* Tutorial */
-"Benvenuto in Trove" = "Welcome to Trove";
+"Ti diamo il benvenuto in Trove" = "Welcome to Trove";
 "Tutorial" = "Tutorial";
 "Rivedi il tutorial" = "Show Tutorial Again";
 "Salta" = "Skip";
 "Indietro" = "Back";
 "Avanti" = "Next";
 "Inizia" = "Get Started";
-"Tutto ciò che copi, ritrovato." = "Everything you copy, found again.";
+"Ritrova tutto ciò che copi." = "Everything you copy, found again.";
 "Trova e incolla, senza mouse." = "Find and paste, no mouse needed.";
-"Cerca come ricordi, non come hai scritto." = "Search the way you remember, not the way you wrote it.";
+"Cerca come te lo ricordi, non come l’hai scritto." = "Search the way you remember, not the way you wrote it.";
 "⌥↩ incolla la versione pulita." = "⌥↩ pastes the clean version.";
-"Pronto per chat AI e terminale." = "Ready for AI chats and the terminal.";
+"Pronto per le chat AI e il Terminale." = "Ready for AI chats and the terminal.";
 "Cosa cambia con Trove" = "What Trove does differently";
-"Trove ricorda testo, link, immagini, file e colori, con l’app da cui arrivano. Lo apri sopra qualsiasi app con %@." = "Trove remembers text, links, images, files and colors, along with the app they came from. Open it over any app with %@.";
-"%@ per scegliere, ↩ per incollare nell’app che stavi usando. ⇧↩ incolla come testo semplice (da un’immagine, il testo riconosciuto), ⌘1…⌘9 i primi risultati. Il lato da cui esce il pannello si sceglie in Impostazioni." = "%@ to choose, ↩ to paste into the app you were using. ⇧↩ pastes plain text (from an image, the recognized text), ⌘1…⌘9 the first results. Pick the side the panel comes from in Settings.";
-"Trova per parole, per significato e per il testo dentro le immagini, tutto sul Mac. Filtri come type:image, app:Safari e oggi restringono il campo." = "Find by words, by meaning and by the text inside images, all on your Mac. Filters like type:image, app:Safari and today narrow it down.";
-"Toglie i residui del terminale e sostituisce chiavi API, password, carte, IBAN, codici fiscali, email e telefoni con segnaposto come <OPENAI_KEY_1>." = "It strips terminal leftovers and replaces API keys, passwords, cards, IBANs, tax codes, emails and phone numbers with placeholders like <OPENAI_KEY_1>.";
-"Incollando con Trove in ChatGPT, Claude, Perplexity e Gemini i segreti spariscono da soli. Con ⌘V, anche nel browser, Trove propone di oscurarli. In un terminale un’immagine diventa il percorso del file." = "When Trove pastes into ChatGPT, Claude, Perplexity or Gemini, secrets disappear on their own. With ⌘V, in the browser too, Trove offers to hide them. In a terminal an image becomes its file path.";
-"Accessibilità concessa: Trove può incollare nell’app attiva." = "Accessibility granted: Trove can paste into the active app.";
-"Per incollare nell’app attiva Trove ha bisogno del permesso Accessibilità." = "To paste into the active app, Trove needs the Accessibility permission.";
+"Trove conserva testo, link, immagini, file e colori, insieme all’app di provenienza. Aprilo sopra qualsiasi app con %@." = "Trove remembers text, links, images, files and colors, along with the app they came from. Open it over any app with %@.";
+"Usa %@ per scegliere e ↩ per incollare nell’app che stavi usando. ⇧↩ incolla solo il testo (per un’immagine, quello riconosciuto); ⌘1…⌘9 incollano i primi risultati. In Impostazioni puoi scegliere da quale lato compare il pannello." = "%@ to choose, ↩ to paste into the app you were using. ⇧↩ pastes plain text (from an image, the recognized text), ⌘1…⌘9 the first results. Pick the side the panel comes from in Settings.";
+"Cerca per parole, per significato e nel testo delle immagini, tutto sul Mac. Restringi i risultati con filtri come tipo:immagine, app:Safari o oggi." = "Find by words, by meaning and by the text inside images, all on your Mac. Filters like type:image, app:Safari and today narrow it down.";
+"Rimuove i residui del terminale e sostituisce chiavi API, password, numeri di carta, IBAN, codici fiscali, indirizzi email e numeri di telefono con segnaposto come <OPENAI_KEY_1>." = "It strips terminal leftovers and replaces API keys, passwords, cards, IBANs, tax codes, emails and phone numbers with placeholders like <OPENAI_KEY_1>.";
+"Quando incolli con Trove in ChatGPT, Claude, Perplexity o Gemini, i segreti vengono oscurati automaticamente. Con ⌘V, anche nel browser, Trove ti chiede se oscurarli. In un terminale, un’immagine diventa il percorso del file." = "When Trove pastes into ChatGPT, Claude, Perplexity or Gemini, secrets disappear on their own. With ⌘V, in the browser too, Trove offers to hide them. In a terminal an image becomes its file path.";
+"Autorizzazione concessa: Trove può incollare nell’app attiva." = "Accessibility granted: Trove can paste into the active app.";
+"Per incollare nell’app attiva, Trove deve essere autorizzato in Accessibilità." = "To paste into the active app, Trove needs the Accessibility permission.";
 "Visita dal dentista martedì alle 15" = "Dentist appointment Tuesday at 3 pm";
 "Note" = "Notes";
 "Terminale" = "Terminal";
 "ricevuta" = "receipt";
 "oggi" = "today";
+"tipo:immagine" = "type:image";
 "Fattura Enel n. 4471 · 84,20 €" = "Electricity invoice #4471 · €84.20";
 "RICEVUTA DI PAGAMENTO" = "PAYMENT RECEIPT";
 "per significato" = "by meaning";
-"testo nell’immagine" = "text in image";
+"testo nelle immagini" = "text in image";
 "Copiato" = "Copied";
 "Incollato con ⌥↩" = "Pasted with ⌥↩";
 "Perché fallisce?" = "Why does this fail?";
 "Resta sul tuo Mac" = "Stays on your Mac";
 "Niente account né cloud. Il backup su Google Drive è facoltativo." = "No account, no cloud. Backup to Google Drive is optional.";
-"Una ricerca che capisce" = "Search that understands";
-"Per significato e dentro le immagini, on-device con Apple Intelligence." = "By meaning and inside images, on-device with Apple Intelligence.";
-"Pensato per chi usa l’AI" = "Built for people who use AI";
+"Ricerca per significato" = "Search that understands";
+"Per significato e nel testo delle immagini, sul Mac con Apple Intelligence." = "By meaning and inside images, on-device with Apple Intelligence.";
+"Per chi lavora con l’AI" = "Built for people who use AI";
 "Segreti e dati personali oscurati prima di finire in una chat, anche nel browser." = "Secrets and personal data hidden before they end up in a chat, in the browser too.";
-"Gratis e open source" = "Free and open source";
-"Licenza GPL-3.0: il codice è su GitHub, da leggere e migliorare." = "GPL-3.0 license: the code is on GitHub to read and improve.";
+"Gratuito e open source" = "Free and open source";
+"Licenza GPL-3.0: il codice è su GitHub, puoi leggerlo e contribuire." = "GPL-3.0 license: the code is on GitHub to read and improve.";
 
 /* Testo troppo lungo per la redazione */
 "Testo molto lungo: controllato solo il primo milione di caratteri" = "Very long text: only the first million characters were checked";

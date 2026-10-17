@@ -55,34 +55,34 @@ struct TutorialView: View {
 
     private var title: LocalizedStringKey {
         switch page {
-        case 0: "Tutto ciò che copi, ritrovato."
+        case 0: "Ritrova tutto ciò che copi."
         case 1: "Trova e incolla, senza mouse."
-        case 2: "Cerca come ricordi, non come hai scritto."
+        case 2: "Cerca come te lo ricordi, non come l’hai scritto."
         case 3: "⌥↩ incolla la versione pulita."
-        case 4: "Pronto per chat AI e terminale."
+        case 4: "Pronto per le chat AI e il Terminale."
         default: "Cosa cambia con Trove"
         }
     }
 
     private var text: LocalizedStringKey {
         switch page {
-        case 0: "Trove ricorda testo, link, immagini, file e colori, con l’app da cui arrivano. Lo apri sopra qualsiasi app con \(combo)."
-        case 1: "\(PanelEdge.current.isVertical ? "↑ ↓" : "← →") per scegliere, ↩ per incollare nell’app che stavi usando. ⇧↩ incolla come testo semplice (da un’immagine, il testo riconosciuto), ⌘1…⌘9 i primi risultati. Il lato da cui esce il pannello si sceglie in Impostazioni."
-        case 2: "Trova per parole, per significato e per il testo dentro le immagini, tutto sul Mac. Filtri come type:image, app:Safari e oggi restringono il campo."
-        case 3: "Toglie i residui del terminale e sostituisce chiavi API, password, carte, IBAN, codici fiscali, email e telefoni con segnaposto come <OPENAI_KEY_1>."
-        default: "Incollando con Trove in ChatGPT, Claude, Perplexity e Gemini i segreti spariscono da soli. Con ⌘V, anche nel browser, Trove propone di oscurarli. In un terminale un’immagine diventa il percorso del file."
+        case 0: "Trove conserva testo, link, immagini, file e colori, insieme all’app di provenienza. Aprilo sopra qualsiasi app con \(combo)."
+        case 1: "Usa \(PanelEdge.current.isVertical ? "↑ ↓" : "← →") per scegliere e ↩ per incollare nell’app che stavi usando. ⇧↩ incolla solo il testo (per un’immagine, quello riconosciuto); ⌘1…⌘9 incollano i primi risultati. In Impostazioni puoi scegliere da quale lato compare il pannello."
+        case 2: "Cerca per parole, per significato e nel testo delle immagini, tutto sul Mac. Restringi i risultati con filtri come tipo:immagine, app:Safari o oggi."
+        case 3: "Rimuove i residui del terminale e sostituisce chiavi API, password, numeri di carta, IBAN, codici fiscali, indirizzi email e numeri di telefono con segnaposto come <OPENAI_KEY_1>."
+        default: "Quando incolli con Trove in ChatGPT, Claude, Perplexity o Gemini, i segreti vengono oscurati automaticamente. Con ⌘V, anche nel browser, Trove ti chiede se oscurarli. In un terminale, un’immagine diventa il percorso del file."
         }
     }
 
     @ViewBuilder private var permission: some View {
         if trusted {
-            Label("Accessibilità concessa: Trove può incollare nell’app attiva.", systemImage: "checkmark.circle.fill")
+            Label("Autorizzazione concessa: Trove può incollare nell’app attiva.", systemImage: "checkmark.circle.fill")
                 .font(Theme.ui(12)).foregroundStyle(.green)
         } else {
             VStack(spacing: 6) {
-                Text("Per incollare nell’app attiva Trove ha bisogno del permesso Accessibilità.")
+                Text("Per incollare nell’app attiva, Trove deve essere autorizzato in Accessibilità.")
                     .font(Theme.prose(13)).foregroundStyle(.secondary)
-                Button("Concedi accesso Accessibilità") {
+                Button("Autorizza in Accessibilità…") {
                     Paster.promptForAccessibility()
                     NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
                 }
@@ -270,12 +270,12 @@ private struct SearchScene: View {
             .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: Theme.fieldRadius, style: .continuous))
             HStack(spacing: 10) {
                 Mini(icon: "doc.text", text: "Fattura Enel n. 4471 · 84,20 €", app: "Mail", selected: done, badge: done ? "per significato" : nil)
-                Mini(icon: "photo", text: "RICEVUTA DI PAGAMENTO", app: "Screenshot", selected: done, badge: done ? "testo nell’immagine" : nil, image: true)
+                Mini(icon: "photo", text: "RICEVUTA DI PAGAMENTO", app: "Screenshot", selected: done, badge: done ? "testo nelle immagini" : nil, image: true)
                 Mini(icon: "chevron.left.forwardslash.chevron.right", text: "func greet(_ name: String)", app: "Xcode", dim: done)
                 Mini(icon: "link", text: "apple.com/it/iphone", app: "Safari", dim: done)
             }
             HStack(spacing: 8) {
-                ForEach(["type:image", "app:Safari", String(localized: "oggi")], id: \.self) { Key($0) }
+                ForEach([String(localized: "tipo:immagine"), "app:Safari", String(localized: "oggi")], id: \.self) { Key($0) }
             }
             .opacity(0.8)
         }
@@ -304,7 +304,7 @@ private struct CleanScene: View {
                 .padding(14).frame(maxWidth: .infinity, minHeight: 150, alignment: .topLeading)
                 .background(Color.codeSurface, in: RoundedRectangle(cornerRadius: Theme.fieldRadius, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: Theme.fieldRadius, style: .continuous).strokeBorder(clean ? Color.trove.opacity(0.6) : Color.hairline, lineWidth: clean ? 1 : 0.5))
-                Label("\(3) segreti nascosti con segnaposto", systemImage: "lock.fill")
+                Label("\(3) segreti oscurati con segnaposto", systemImage: "lock.fill")
                     .font(Theme.ui(11, .medium)).padding(.horizontal, 12).padding(.vertical, 6)
                     .background(.regularMaterial, in: Capsule())
                     .opacity(clean ? 1 : 0).offset(y: clean ? 0 : 10)
@@ -385,9 +385,9 @@ private struct WhyScene: View {
     @State private var shown = false
     private let tiles: [(String, LocalizedStringKey, LocalizedStringKey)] = [
         ("lock.laptopcomputer", "Resta sul tuo Mac", "Niente account né cloud. Il backup su Google Drive è facoltativo."),
-        ("sparkle.magnifyingglass", "Una ricerca che capisce", "Per significato e dentro le immagini, on-device con Apple Intelligence."),
-        ("wand.and.sparkles", "Pensato per chi usa l’AI", "Segreti e dati personali oscurati prima di finire in una chat, anche nel browser."),
-        ("chevron.left.forwardslash.chevron.right", "Gratis e open source", "Licenza GPL-3.0: il codice è su GitHub, da leggere e migliorare."),
+        ("sparkle.magnifyingglass", "Ricerca per significato", "Per significato e nel testo delle immagini, sul Mac con Apple Intelligence."),
+        ("wand.and.sparkles", "Per chi lavora con l’AI", "Segreti e dati personali oscurati prima di finire in una chat, anche nel browser."),
+        ("chevron.left.forwardslash.chevron.right", "Gratuito e open source", "Licenza GPL-3.0: il codice è su GitHub, puoi leggerlo e contribuire."),
     ]
 
     var body: some View {

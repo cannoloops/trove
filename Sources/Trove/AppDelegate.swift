@@ -24,7 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         do { store = try Store(directory: Self.dataDir) } catch {
             let a = NSAlert()
             let detail = "\(error)"
-            a.messageText = String(localized: "Trove non riesce ad aprire la history")
+            a.messageText = String(localized: "Impossibile aprire la cronologia di Trove")
             a.informativeText = String(localized: "\(detail)\n\nCartella: \(Self.dataDir.path)")
             a.runModal()
             NSApp.terminate(nil)
@@ -100,9 +100,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Toast.show(String(localized: "Testo molto lungo: controllato solo il primo milione di caratteri"),
                        detail: String(localized: "Eventuali segreti oltre quel punto non sono stati nascosti."))
         } else if hidden > 0 {
-            Toast.show(hidden == 1 ? String(localized: "1 segreto nascosto con un segnaposto") : String(localized: "\(hidden) segreti nascosti con segnaposto"),
+            Toast.show(hidden == 1 ? String(localized: "1 segreto oscurato con un segnaposto") : String(localized: "\(hidden) segreti oscurati con segnaposto"),
                        detail: mode == .agent ? String(localized: "⌥↩ incolla sempre la versione senza segreti.")
-                                              : String(localized: "Per incollare l’originale disattiva l’opzione in Impostazioni › AI e agenti."))
+                                              : String(localized: "Per incollare l’originale, disattiva l’opzione in Impostazioni › AI e agenti."))
         }
     }
 
@@ -153,7 +153,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             switch r {
             case .success(let dest):
                 settings.lastBackup = Backup.lastBackupDate(at: dest)
-                settings.backupStatus = String(localized: "Backup completato in \(dest.path).")
+                settings.backupStatus = String(localized: "Backup salvato in \(dest.path).")
             case .failure(let error):
                 settings.backupStatus = error as? BackupError == .driveNotFound
                     ? String(localized: "Google Drive per desktop non trovato.") : String(localized: "Backup non riuscito: \(error.localizedDescription)")
@@ -171,8 +171,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } catch {
             // i dati locali non sono stati toccati: si riapre lo stesso DB
             let msg = error as? BackupError == .backupCorrupted
-                ? String(localized: "Il backup su Drive non è leggibile (forse non ancora scaricato): la history locale è intatta.")
-                : String(localized: "Ripristino non riuscito: \(error.localizedDescription). La history locale è intatta.")
+                ? String(localized: "Impossibile leggere il backup su Drive (forse non è ancora stato scaricato). La cronologia su questo Mac non è stata modificata.")
+                : String(localized: "Ripristino non riuscito: \(error.localizedDescription). La cronologia su questo Mac non è stata modificata.")
             let a = NSAlert()
             a.messageText = String(localized: "Ripristino non riuscito")
             a.informativeText = msg
@@ -200,7 +200,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let open = NSMenuItem(title: String(localized: "Apri Trove"), action: #selector(openPanel), keyEquivalent: "")
         menu.addItem(open)
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: String(localized: "Esegui backup ora"), action: #selector(menuBackup), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: String(localized: "Esegui backup adesso"), action: #selector(menuBackup), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: String(localized: "Impostazioni…"), action: #selector(openSettingsAction), keyEquivalent: ","))
         let check = NSMenuItem(title: String(localized: "Controlla aggiornamenti…"), action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)), keyEquivalent: "")
         menu.addItem(check)
@@ -238,7 +238,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let w = NSWindow(contentViewController: NSHostingController(rootView: TutorialView(combo: settings.combo.display) { [weak self] in
             self?.tutorialWindow?.close()
         }))
-        w.title = String(localized: "Benvenuto in Trove")
+        w.title = String(localized: "Ti diamo il benvenuto in Trove")
         w.styleMask = [.titled, .closable, .fullSizeContentView]
         w.titlebarAppearsTransparent = true
         w.titleVisibility = .hidden
