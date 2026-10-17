@@ -4,12 +4,12 @@ A clipboard history manager for macOS 26. Press **⇧⌘V**, find what you copie
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/panel-dark.png">
-  <img alt="The Trove panel with recent clips" src="docs/screenshots/panel-light.png">
+  <img alt="The Trove panel with recent items" src="docs/screenshots/panel-light.png">
 </picture>
 
-Everything stays on your Mac, in `~/Library/Application Support/Trove`. A short tutorial opens on first launch; you can see it again from Settings.
+Everything stays on your Mac, in `~/Library/Application Support/Trove`. A short tutorial opens on first launch; you can reopen it from **Settings › General › Show Tutorial Again**.
 
-### Find it the way you remember it
+## Find it the way you remember it
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/search-dark.png">
@@ -18,7 +18,7 @@ Everything stays on your Mac, in `~/Library/Application Support/Trove`. A short 
 
 Text, rich text, links, images, files and colors, with the app they came from. Search by words, by meaning and by the text inside images, all on-device (with Apple Intelligence when available). Filters narrow it down: `type:image`, `app:Safari`, `today`.
 
-### Paste without the mouse
+## Paste without the mouse
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/keyboard-dark.png">
@@ -27,23 +27,23 @@ Text, rich text, links, images, files and colors, with the app they came from. S
 
 The panel opens from the side of the screen you choose in Settings (left by default). Move with ↑ ↓ (← → when it sits at the top or bottom), press ↩ to paste into the app you were using.
 
-### ⌥↩ pastes the clean version
+## ⌥↩ pastes the clean version
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/clean-dark.png">
   <img alt="Terminal leftovers removed and secrets replaced by placeholders" src="docs/screenshots/clean-light.png">
 </picture>
 
-Terminal artifacts are stripped, and API keys, passwords, cards, IBANs, Italian tax codes and VAT numbers, emails and phone numbers become placeholders like `<OPENAI_KEY_1>`.
+Terminal artifacts are stripped, and API keys, passwords, card numbers, IBANs, Italian tax codes and VAT numbers, email addresses and Italian phone numbers become placeholders like `<OPENAI_KEY_1>`.
 
-### Safe in AI chats, handy in the terminal
+## AI chats and terminals
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/agents-dark.png">
   <img alt="A secret pasted into claude.ai with the offer to hide it, and an image pasted into a terminal as a file path" src="docs/screenshots/agents-light.png">
 </picture>
 
-- Pasting with Trove into the ChatGPT, Claude, Perplexity or Gemini apps masks secrets automatically.
+- Pasting with Trove (↩) into the ChatGPT, Codex, Claude, Perplexity or Gemini apps masks secrets automatically (you can turn this off in Settings › AI and agents).
 - Pasting with ⌘V into those apps, or into their websites in Safari, Chrome, Arc, Brave, Edge or Firefox, offers to hide what Trove recognizes.
 - Images pasted into a terminal become a file path; ⇧↩ on an image pastes only the recognized text.
 
@@ -56,15 +56,15 @@ Also: optional backup to Google Drive for desktop (`My Drive/Trove`), light and 
    ```bash
    xattr -dr com.apple.quarantine /Applications/Trove.app
    ```
-3. Grant **Accessibility** when asked (System Settings › Privacy & Security › Accessibility): Trove needs it to paste into the frontmost app.
+3. When asked, allow Trove in **System Settings › Privacy & Security › Accessibility**. It needs this to paste into the frontmost app.
 
-Trove checks for updates by itself (menu bar icon › Check for Updates…). Releases from 1.0.1 on share a fixed signing certificate, so the Accessibility permission survives updates. Updating from 1.0.0 is the exception: macOS forgets the permission once, so if pasting stops working, remove Trove from the Accessibility list and add it again.
+Trove checks for updates automatically (menu bar icon › Check for Updates…). Starting with 1.0.1, every release is signed with the same certificate, so the Accessibility permission survives updates. The one exception is updating from 1.0.0: macOS drops the permission, so if pasting stops working, remove Trove from the Accessibility list and add it again.
 
 Requires macOS 26 on Apple silicon.
 
 ## Usage
 
-Press **⇧⌘V** (configurable in Settings) to open the panel over the current app. Settings also choose the side of the screen it opens from.
+Press **⇧⌘V** (configurable in Settings) to open the panel over the current app. You can also change the side it opens from in Settings.
 
 | Key | Action |
 |---|---|
@@ -72,12 +72,12 @@ Press **⇧⌘V** (configurable in Settings) to open the panel over the current 
 | ↩ | Paste into the app you were using |
 | ⇧↩ | Paste as plain text |
 | ⌥↩ | Paste cleaned up and without secrets ([details](docs/guide.md#smart-paste)) |
-| ⌘1 … ⌘9 | Paste the n-th result (add ⇧ for plain text) |
+| ⌘1 … ⌘9 | Paste result 1–9 (add ⇧ for plain text) |
 | Space | Preview (when the search field is empty) |
 | ⌘C | Copy without pasting |
 | ⌘⌫ | Delete the selected item |
 | ⌘, | Settings |
-| Esc | Close the preview, clear the search, then hide the panel |
+| Esc | Close the preview, then clear the search, then hide the panel (one step per press) |
 
 Type to search. Words can be combined with filters:
 
