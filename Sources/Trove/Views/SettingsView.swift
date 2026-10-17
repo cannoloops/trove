@@ -146,6 +146,9 @@ struct SettingsView: View {
                     .help(String(localized: "Trove apre il link per leggerne il titolo: il sito vede il tuo indirizzo IP. I link con parametri (?…) o credenziali non vengono mai aperti."))
                 Button("Cancella tutta la history…", role: .destructive) { confirmClear = true }
             } header: { Label("History", systemImage: "clock.arrow.circlepath") }
+            Section {
+                Link("Sostieni lo sviluppo di Trove", destination: URL(string: "https://github.com/sponsors/cannoloops")!)
+            } header: { Label("Supporta Trove", systemImage: "heart") }
         }
         .formStyle(.grouped)
         .frame(width: 560)
