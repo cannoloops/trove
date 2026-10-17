@@ -3,7 +3,11 @@ import Foundation
 /// "Incolla per agenti": testo pulito e senza segreti, immagini come percorso file.
 public enum AgentPaste {
     public static func text(_ s: String, fromTerminal: Bool = false) -> String {
-        Secrets.redact(Cleaner.clean(s, fromTerminal: fromTerminal)).text
+        redact(s, fromTerminal: fromTerminal).text
+    }
+
+    public static func redact(_ s: String, fromTerminal: Bool = false) -> Secrets.Result {
+        Secrets.redact(Cleaner.clean(s, fromTerminal: fromTerminal))
     }
 
     /// Copia il blob in una cartella senza spazi nel percorso (comoda da incollare in un terminale).

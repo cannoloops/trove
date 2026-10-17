@@ -44,8 +44,9 @@ enum Paster {
             else { pb.setString(item.filePaths.joined(separator: "\n"), forType: .string) }
         default:
             if mode == .agent {
-                pb.setString(AgentPaste.text(item.text, fromTerminal: item.sourceBundle.map(terminals.contains) ?? false), forType: .string)
-                break
+                let r = AgentPaste.redact(item.text, fromTerminal: item.sourceBundle.map(terminals.contains) ?? false)
+                pb.setString(r.text, forType: .string)
+                return r.found.count
             }
             // nelle chat AI i segreti non partono: segnaposto + avviso. Nei terminali ↩ resta fedele (es. export KEY=…)
             if toAIChat, redactForAI {

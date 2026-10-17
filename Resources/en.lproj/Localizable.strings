@@ -107,6 +107,7 @@
 "%@\n\nCartella: %@" = "%1$@\n\nFolder: %2$@";
 "1 segreto nascosto con un segnaposto" = "1 secret hidden with a placeholder";
 "%lld segreti nascosti con segnaposto" = "%lld secrets hidden with placeholders";
+"⌥↩ incolla sempre la versione senza segreti." = "⌥↩ always pastes the version without secrets.";
 "Per incollare l’originale disattiva l’opzione in Impostazioni › AI e agenti." = "To paste the original, turn the option off in Settings › AI and agents.";
 "Backup in corso…" = "Backing up…";
 "Backup completato in %@." = "Backup completed in %@.";

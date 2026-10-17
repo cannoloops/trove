@@ -87,7 +87,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { Paster.sendPaste() }
         if hidden > 0 {
             Toast.show(hidden == 1 ? String(localized: "1 segreto nascosto con un segnaposto") : String(localized: "\(hidden) segreti nascosti con segnaposto"),
-                       detail: String(localized: "Per incollare l’originale disattiva l’opzione in Impostazioni › AI e agenti."))
+                       detail: mode == .agent ? String(localized: "⌥↩ incolla sempre la versione senza segreti.")
+                                              : String(localized: "Per incollare l’originale disattiva l’opzione in Impostazioni › AI e agenti."))
         }
     }
 
