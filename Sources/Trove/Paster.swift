@@ -20,9 +20,10 @@ enum Paster {
     static var redactForAI: Bool { UserDefaults.standard.object(forKey: "redactForAI") as? Bool ?? true }
 
     /// `target`: bundle id dell'app che riceverà l'incolla (nil = sconosciuta, es. ⌘C).
-    /// Ritorna quanti segreti sono stati nascosti automaticamente (per avvisare l'utente).
+    /// Ritorna quanti segreti sono stati nascosti automaticamente (per avvisare l'utente) e se il testo
+    /// superava `Secrets.limit`, quindi è stato analizzato solo in parte.
     @discardableResult
-    static func write(_ item: ClipItem, mode: PasteMode, target: String?, store: Store) -> Int {
+    static func write(_ item: ClipItem, mode: PasteMode, target: String?, store: Store) -> (hidden: Int, partial: Bool) {
         // ⇧↩ su un'immagine: solo il testo riconosciuto (OCR), con le stesse regole del testo
         if item.kind == .image, mode == .plain {
             var t = item; t.kind = .text; t.text = item.ocr ?? ""
@@ -35,7 +36,7 @@ enum Paster {
 
         switch item.kind {
         case .image:
-            guard let blob = item.blobPath.flatMap(store.blobURL) else { return 0 }
+            guard let blob = item.blobPath.flatMap(store.blobURL) else { return (0, false) }
             // agenti e terminali leggono file, non immagini dal pasteboard
             if mode == .agent || toTerminal, let path = try? AgentPaste.imagePath(blob: blob, cacheDir: cacheDir) {
                 pb.setString(path.path, forType: .string)
@@ -51,12 +52,12 @@ enum Paster {
             if mode == .agent {
                 let r = AgentPaste.redact(item.text, fromTerminal: item.sourceBundle.map(terminals.contains) ?? false)
                 pb.setString(r.text, forType: .string)
-                return r.found.count
+                return (r.found.count, r.truncated)
             }
             // nelle chat AI i segreti non partono: segnaposto + avviso. Nei terminali ↩ resta fedele (es. export KEY=…)
             if toAIChat, redactForAI {
                 let r = Secrets.redact(item.text)
-                if !r.found.isEmpty { pb.setString(r.text, forType: .string); return r.found.count }
+                if !r.found.isEmpty || r.truncated { pb.setString(r.text, forType: .string); return (r.found.count, r.truncated) }
             }
             pb.setString(item.text, forType: .string)
             guard mode == .normal else { break }
@@ -64,7 +65,7 @@ enum Paster {
             if let html = item.html { pb.setString(html, forType: .html) }
             if item.kind == .link { pb.setString(item.text.trimmingCharacters(in: .whitespacesAndNewlines), forType: .URL) }
         }
-        return 0
+        return (0, false)
     }
 
     static var isTrusted: Bool { AXIsProcessTrusted() }

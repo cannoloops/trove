@@ -91,12 +91,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if item.kind == .image, mode == .plain, (item.ocr ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             Toast.show(String(localized: "Nessun testo riconosciuto nell’immagine"), detail: String(localized: "↩ incolla l’immagine.")); return
         }
-        let hidden = Paster.write(item, mode: mode, target: target, store: store)
+        let (hidden, partial) = Paster.write(item, mode: mode, target: target, store: store)
         monitor.skipCurrent()
         touch(item.id)
         panel.hide()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { Paster.sendPaste() }
-        if hidden > 0 {
+        if partial {
+            Toast.show(String(localized: "Testo molto lungo: controllato solo il primo milione di caratteri"),
+                       detail: String(localized: "Eventuali segreti oltre quel punto non sono stati nascosti."))
+        } else if hidden > 0 {
             Toast.show(hidden == 1 ? String(localized: "1 segreto nascosto con un segnaposto") : String(localized: "\(hidden) segreti nascosti con segnaposto"),
                        detail: mode == .agent ? String(localized: "⌥↩ incolla sempre la versione senza segreti.")
                                               : String(localized: "Per incollare l’originale disattiva l’opzione in Impostazioni › AI e agenti."))
