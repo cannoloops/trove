@@ -23,6 +23,11 @@ enum Paster {
     /// Ritorna quanti segreti sono stati nascosti automaticamente (per avvisare l'utente).
     @discardableResult
     static func write(_ item: ClipItem, mode: PasteMode, target: String?, store: Store) -> Int {
+        // ⇧↩ su un'immagine: solo il testo riconosciuto (OCR), con le stesse regole del testo
+        if item.kind == .image, mode == .plain {
+            var t = item; t.kind = .text; t.text = item.ocr ?? ""
+            return write(t, mode: mode, target: target, store: store)
+        }
         let pb = NSPasteboard.general
         pb.clearContents()
         let toTerminal = target.map(terminals.contains) ?? false

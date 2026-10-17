@@ -80,7 +80,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func paste(_ item: ClipItem, mode: PasteMode) {
         let target = NSWorkspace.shared.frontmostApplication?.bundleIdentifier // il pannello non attiva Trove
-        let hidden = Paster.write(store.get(item.id) ?? item, mode: mode, target: target, store: store)
+        let item = store.get(item.id) ?? item
+        if item.kind == .image, mode == .plain, (item.ocr ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            Toast.show(String(localized: "Nessun testo riconosciuto nell’immagine"), detail: String(localized: "↩ incolla l’immagine.")); return
+        }
+        let hidden = Paster.write(item, mode: mode, target: target, store: store)
         monitor.skipCurrent()
         touch(item.id)
         panel.hide()

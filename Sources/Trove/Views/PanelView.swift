@@ -98,7 +98,7 @@ struct PanelView: View {
                             }
                             .contextMenu {
                                 Button("Incolla") { actions.paste(item, .normal) }
-                                Button("Incolla come testo semplice") { actions.paste(item, .plain) }
+                                Button(item.kind == .image ? "Incolla solo il testo dell’immagine" : "Incolla come testo semplice") { actions.paste(item, .plain) }
                                 Button("Incolla per agenti (pulito, senza segreti)") { actions.paste(item, .agent) }
                                 Button("Copia") { actions.copy(item) }
                                 Button("Anteprima") { model.selection = i; model.previewing = true }
