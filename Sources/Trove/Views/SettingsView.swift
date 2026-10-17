@@ -26,6 +26,7 @@ final class SettingsModel: ObservableObject {
     var onBackup: () -> Void = {}
     var onRestore: () -> Void = {}
     var onClear: () -> Void = {}
+    var onTutorial: () -> Void = {}
 
     init() { lastBackup = driveFolder.flatMap(Backup.lastBackupDate(at:)) }
 
@@ -67,11 +68,12 @@ struct SettingsView: View {
     @ObservedObject var app: AppModel
     @State private var confirmRestore = false
     @State private var confirmClear = false
+    @AppStorage("panelEdge") private var panelEdge = PanelEdge.left
     @AppStorage("appearance") private var appearance = "dark"
 
     var body: some View {
         Form {
-            Section("Generale") {
+            Section {
                 LabeledContent("Apri Trove") {
                     HStack {
                         Button(s.recording ? String(localized: "Premi la nuova scorciatoia…") : s.combo.display) {
@@ -82,6 +84,12 @@ struct SettingsView: View {
                     }
                 }
                 if let e = s.hotKeyError { Text(e).foregroundStyle(.red).font(.caption) }
+                Picker("Posizione del pannello", selection: $panelEdge) {
+                    Text("In basso").tag(PanelEdge.bottom)
+                    Text("In alto").tag(PanelEdge.top)
+                    Text("A sinistra").tag(PanelEdge.left)
+                    Text("A destra").tag(PanelEdge.right)
+                }
                 Picker("Tema", selection: $appearance) {
                     Text("Sistema").tag("system")
                     Text("Chiaro").tag("light")
@@ -99,14 +107,15 @@ struct SettingsView: View {
                         }
                     }
                 }
-            }
+                LabeledContent("Tutorial") { Button("Rivedi il tutorial", action: s.onTutorial) }
+            } header: { Label("Generale", systemImage: "gearshape") }
             Section {
                 Toggle("Nascondi i segreti nelle chat AI", isOn: $s.redactForAI)
-            } header: { Text("AI e agenti") } footer: {
+            } header: { Label("AI e agenti", systemImage: "sparkles") } footer: {
                 Text("In ChatGPT, Claude, Perplexity e Gemini chiavi API, token, password, carte e IBAN diventano segnaposto come <OPENAI_KEY_1>, con un avviso. Nei terminali ↩ incolla com’è; ⌥↩ incolla ovunque la versione pulita e senza segreti. Le immagini incollate in un terminale diventano il percorso del file.")
                     .font(.caption).foregroundStyle(.secondary)
             }
-            Section("Backup su Google Drive") {
+            Section {
                 if let f = s.driveFolder {
                     LabeledContent("Cartella") {
                         // ponytail: mostra le ultime due cartelle (es. Il mio Drive › Trove), il percorso intero sta nel tooltip
@@ -125,8 +134,8 @@ struct SettingsView: View {
                     Text("Google Drive per desktop non trovato. Installalo e accedi: Trove salverà la history in Il mio Drive/Trove.")
                         .foregroundStyle(.secondary)
                 }
-            }
-            Section("History") {
+            } header: { Label("Backup su Google Drive", systemImage: "externaldrive.badge.icloud") }
+            Section {
                 LabeledContent("Elementi salvati", value: "\(app.totalCount)")
                 LabeledContent("Ricerca per significato") {
                     Text(SemanticTagger.isAvailable ? String(localized: "Attiva (Apple Intelligence on-device)") : String(localized: "Solo embedding locali: Apple Intelligence non disponibile"))
@@ -136,7 +145,7 @@ struct SettingsView: View {
                 Toggle("Scarica il titolo dei link copiati", isOn: $s.fetchLinkTitles)
                     .help(String(localized: "Trove apre il link per leggerne il titolo: il sito vede il tuo indirizzo IP. I link con parametri (?…) o credenziali non vengono mai aperti."))
                 Button("Cancella tutta la history…", role: .destructive) { confirmClear = true }
-            }
+            } header: { Label("History", systemImage: "clock.arrow.circlepath") }
         }
         .formStyle(.grouped)
         .frame(width: 560)

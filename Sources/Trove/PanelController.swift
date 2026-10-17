@@ -2,6 +2,13 @@ import AppKit
 import SwiftUI
 import TroveCore
 
+/// Lato dello schermo da cui esce il pannello.
+enum PanelEdge: String, CaseIterable {
+    case bottom, top, left, right
+    static var current: PanelEdge { UserDefaults.standard.string(forKey: "panelEdge").flatMap(PanelEdge.init) ?? .left }
+    var isVertical: Bool { self == .left || self == .right }
+}
+
 /// Pannello che non attiva l'app: l'app sotto resta in primo piano, così ⌘V arriva lì.
 final class KeyPanel: NSPanel {
     override var canBecomeKey: Bool { true }
@@ -11,6 +18,7 @@ final class KeyPanel: NSPanel {
 @MainActor
 final class PanelController: NSObject, NSWindowDelegate {
     static let height: CGFloat = 352
+    static let sideWidth: CGFloat = 320
     let panel: KeyPanel
     private let model: AppModel
     private var keyMonitor: Any?
@@ -50,11 +58,19 @@ final class PanelController: NSObject, NSWindowDelegate {
     func show() {
         let mouse = NSEvent.mouseLocation
         let screen = NSScreen.screens.first { $0.frame.contains(mouse) } ?? NSScreen.main!
-        let vf = screen.visibleFrame
-        let target = NSRect(x: vf.minX + 8, y: vf.minY + 8, width: vf.width - 16, height: Self.height)
+        // visibleFrame esclude già barra dei menu e Dock (se visibile)
+        let vf = screen.visibleFrame.insetBy(dx: 8, dy: 8)
+        let edge = PanelEdge.current
+        let target: NSRect, slide: (CGFloat, CGFloat)
+        switch edge {
+        case .bottom: target = NSRect(x: vf.minX, y: vf.minY, width: vf.width, height: Self.height); slide = (0, -40)
+        case .top: target = NSRect(x: vf.minX, y: vf.maxY - Self.height, width: vf.width, height: Self.height); slide = (0, 40)
+        case .left: target = NSRect(x: vf.minX, y: vf.minY, width: Self.sideWidth, height: vf.height); slide = (-40, 0)
+        case .right: target = NSRect(x: vf.maxX - Self.sideWidth, y: vf.minY, width: Self.sideWidth, height: vf.height); slide = (40, 0)
+        }
         model.resetForOpen()
         let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
-        panel.setFrame(reduceMotion ? target : target.offsetBy(dx: 0, dy: -40), display: false)
+        panel.setFrame(reduceMotion ? target : target.offsetBy(dx: slide.0, dy: slide.1), display: false)
         panel.alphaValue = 0
         panel.makeKeyAndOrderFront(nil)
         NSAnimationContext.runAnimationGroup { ctx in
@@ -95,8 +111,9 @@ final class PanelController: NSObject, NSWindowDelegate {
         case 53: // esc
             if model.previewing { model.previewing = false } else if !model.query.isEmpty { model.query = "" } else { hide() }
             return true
-        case 123: model.move(-1); return true // ←
-        case 124: model.move(1); return true // →
+        // orizzontale: ←→ scorrono le card; verticale: ↑↓ (←→ restano al campo di ricerca)
+        case 123 where !PanelEdge.current.isVertical, 126 where PanelEdge.current.isVertical: model.move(-1); return true
+        case 124 where !PanelEdge.current.isVertical, 125 where PanelEdge.current.isVertical: model.move(1); return true
         case 36, 76: // ↩
             if let it = model.selected { onPaste(it, f.contains(.option) ? .agent : f.contains(.shift) ? .plain : .normal) }
             return true

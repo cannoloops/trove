@@ -7,6 +7,8 @@ struct CardView: View {
     let index: Int
     let selected: Bool
     let store: Store
+    var width = Self.size.width
+    var height = Self.size.height
     static let size = CGSize(width: 228, height: 236)
 
     var body: some View {
@@ -15,7 +17,7 @@ struct CardView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             label
         }
-        .frame(width: Self.size.width, height: Self.size.height)
+        .frame(width: width, height: height)
         .background(Color.cardSurface)
         .overlay(alignment: .topTrailing) {
             if index < 9 { KeyCap("⌘\(index + 1)").padding(8).opacity(selected ? 1 : 0) }

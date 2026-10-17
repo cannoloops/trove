@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hotKey: HotKey!
     private var statusItem: NSStatusItem!
     private var settingsWindow: NSWindow?
+    private var tutorialWindow: NSWindow?
     private let settings = SettingsModel()
     private var enrichQueue: Task<Void, Never>?
     private let updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
@@ -48,6 +49,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settings.onCombo = { [weak self] c in self?.hotKey.register(c) ?? false }
         settings.onBackup = { [weak self] in self?.backupNow(manual: true) }
         settings.onRestore = { [weak self] in self?.restore() }
+        settings.onTutorial = { [weak self] in self?.showTutorial() }
         settings.onClear = { [weak self] in
             self?.store.deleteAll(); self?.model.reload()
             try? FileManager.default.removeItem(at: Paster.cacheDir)
@@ -55,7 +57,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         Theme.applyAppearance()
         setupStatusItem()
-        if !Paster.isTrusted { Paster.promptForAccessibility() }
+        setupEditMenu()
+        // al primo avvio il tutorial chiede anche l'Accessibilità, nell'ultima schermata
+        if !UserDefaults.standard.bool(forKey: "tutorialSeen") { showTutorial() }
+        else if !Paster.isTrusted { Paster.promptForAccessibility() }
 
         // arricchisce ciò che non lo è ancora (es. dopo un ripristino o un aggiornamento)
         let store = store!
@@ -198,14 +203,50 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(check)
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: String(localized: "Esci da Trove"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        for (i, symbol) in [0: "list.clipboard", 2: "arrow.up.doc", 3: "gearshape", 4: "arrow.triangle.2.circlepath", 6: "power"] {
+            menu.items[i].image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+        }
         menu.items.forEach { if $0.action != #selector(NSApplication.terminate(_:)) { $0.target = self } }
         check.target = updater
         statusItem.menu = menu
     }
 
+    /// Le scorciatoie di modifica (⌘A, ⌘X, ⌘V, ⌘Z) passano dal menu principale: un'app accessoria non lo mostra,
+    /// ma senza di esso i campi di testo non le ricevono.
+    private func setupEditMenu() {
+        let edit = NSMenu(title: "Edit")
+        for (title, action, key) in [("Undo", "undo:", "z"), ("Redo", "redo:", "Z"), ("Cut", "cut:", "x"),
+                                     ("Copy", "copy:", "c"), ("Paste", "paste:", "v"), ("Select All", "selectAll:", "a")] {
+            edit.addItem(NSMenuItem(title: title, action: Selector(action), keyEquivalent: key))
+        }
+        let item = NSMenuItem()
+        item.submenu = edit
+        NSApp.mainMenu = NSMenu()
+        NSApp.mainMenu?.addItem(item)
+    }
+
     @objc private func openPanel() { panel.show() }
     @objc private func menuBackup() { backupNow(manual: true) }
     @objc private func openSettingsAction() { openSettings() }
+
+    func showTutorial() {
+        panel.hide()
+        tutorialWindow?.close()
+        let w = NSWindow(contentViewController: NSHostingController(rootView: TutorialView(combo: settings.combo.display) { [weak self] in
+            self?.tutorialWindow?.close()
+        }))
+        w.title = String(localized: "Benvenuto in Trove")
+        w.styleMask = [.titled, .closable, .fullSizeContentView]
+        w.titlebarAppearsTransparent = true
+        w.titleVisibility = .hidden
+        w.isMovableByWindowBackground = true
+        w.isReleasedWhenClosed = false
+        w.center()
+        tutorialWindow = w
+        UserDefaults.standard.set(true, forKey: "tutorialSeen")
+        NSApp.activate()
+        w.makeKeyAndOrderFront(nil)
+    }
 
     func openSettings() {
         panel.hide()

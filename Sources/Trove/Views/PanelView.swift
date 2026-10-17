@@ -12,6 +12,7 @@ struct PanelView: View {
     let actions: PanelActions
     @FocusState private var searchFocused: Bool
     @Namespace private var filterNS
+    @AppStorage("panelEdge") private var edge = PanelEdge.left
 
     private let filters: [(String, ClipKind?)] = [
         (String(localized: "Tutto"), nil), (String(localized: "Testo"), .text), (String(localized: "Rich"), .richText), (String(localized: "Link"), .link),
@@ -31,10 +32,30 @@ struct PanelView: View {
         .onAppear { searchFocused = true }
     }
 
-    private var topBar: some View {
-        HStack(spacing: 12) {
-            Text("trove").font(Theme.ui(15, .bold)).foregroundStyle(Color.trove)
-                .accessibilityHidden(true)
+    @ViewBuilder private var topBar: some View {
+        if edge.isVertical {
+            VStack(spacing: 8) {
+                HStack { logo; Spacer(); countAndSettings }
+                searchField
+                ScrollView(.horizontal, showsIndicators: false) { filterBar }
+            }
+        } else {
+            HStack(spacing: 12) {
+                logo
+                searchField.frame(maxWidth: 480)
+                filterBar
+                Spacer()
+                countAndSettings
+            }
+        }
+    }
+
+    private var logo: some View {
+        Text("trove").font(Theme.ui(15, .bold)).foregroundStyle(Color.trove)
+            .accessibilityHidden(true)
+    }
+
+    private var searchField: some View {
             HStack(spacing: 6) {
                 Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
                 TextField("Cerca  ·  type:image  app:Safari  oggi", text: $model.query)
@@ -50,10 +71,10 @@ struct PanelView: View {
             .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: Theme.fieldRadius, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: Theme.fieldRadius, style: .continuous)
                 .strokeBorder(searchFocused ? Color.trove.opacity(0.7) : Color.hairline, lineWidth: searchFocused ? 1.5 : 0.5))
-            .frame(maxWidth: 480)
+    }
 
-            filterBar
-            Spacer()
+    private var countAndSettings: some View {
+        HStack(spacing: 12) {
             Text(model.query.isEmpty && model.kindFilter == nil ? (model.totalCount == 1 ? String(localized: "1 elemento") : String(localized: "\(model.totalCount) elementi")) : (model.results.count == 1 ? String(localized: "1 risultato") : String(localized: "\(model.results.count) risultati")))
                 .font(Theme.ui(12)).foregroundStyle(.secondary).monospacedDigit()
             Button(action: actions.settings) { Image(systemName: "gearshape") }
@@ -84,37 +105,45 @@ struct PanelView: View {
 
     private var strip: some View {
         ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: 12) {
-                    ForEach(Array(model.results.enumerated()), id: \.element.id) { i, item in
-                        if model.query.isEmpty, let day = dayLabel(at: i) { DaySeparator(text: day) }
-                        CardView(item: item, index: i, selected: i == model.selection, store: model.store)
-                            .id(item.id)
-                            .onTapGesture(count: 2) { actions.paste(item, .normal) }
-                            .simultaneousGesture(TapGesture().onEnded { model.selection = i })
-                            .popover(isPresented: Binding(get: { model.previewing && i == model.selection },
-                                                          set: { if !$0 { model.previewing = false } }), arrowEdge: .top) {
-                                PreviewView(item: model.store.get(item.id) ?? item, store: model.store)
-                            }
-                            .contextMenu {
-                                Button("Incolla") { actions.paste(item, .normal) }
-                                Button(item.kind == .image ? "Incolla solo il testo dell’immagine" : "Incolla come testo semplice") { actions.paste(item, .plain) }
-                                Button("Incolla per agenti (pulito, senza segreti)") { actions.paste(item, .agent) }
-                                Button("Copia") { actions.copy(item) }
-                                Button("Anteprima") { model.selection = i; model.previewing = true }
-                                Divider()
-                                Button("Elimina", role: .destructive) { model.delete(item) }
-                            }
-                    }
-                }
-                .padding(.vertical, 10).padding(.horizontal, 4)
+            ScrollView(edge.isVertical ? .vertical : .horizontal, showsIndicators: false) {
+                if edge.isVertical { LazyVStack(spacing: 12) { cards }.padding(.vertical, 10).padding(.horizontal, 4) }
+                else { LazyHStack(spacing: 12) { cards }.padding(.vertical, 10).padding(.horizontal, 4) }
             }
             .onChange(of: model.selection) { _, new in
                 guard model.results.indices.contains(new) else { return }
                 withAnimation(.easeOut(duration: 0.12)) { proxy.scrollTo(model.results[new].id, anchor: .center) }
             }
-            .onChange(of: model.query) { if let f = model.results.first { proxy.scrollTo(f.id, anchor: .leading) } }
+            .onChange(of: model.query) { if let f = model.results.first { proxy.scrollTo(f.id, anchor: edge.isVertical ? .top : .leading) } }
         }
+    }
+
+    private var popoverEdge: Edge {
+        switch edge { case .bottom: .top; case .top: .bottom; case .left: .trailing; case .right: .leading }
+    }
+
+    @ViewBuilder private var cards: some View {
+            ForEach(Array(model.results.enumerated()), id: \.element.id) { i, item in
+                if model.query.isEmpty, let day = dayLabel(at: i) { DaySeparator(text: day, vertical: edge.isVertical) }
+                CardView(item: item, index: i, selected: i == model.selection, store: model.store,
+                         width: edge.isVertical ? PanelController.sideWidth - 40 : CardView.size.width,
+                     height: edge.isVertical ? 168 : CardView.size.height)
+                    .id(item.id)
+                    .onTapGesture(count: 2) { actions.paste(item, .normal) }
+                    .simultaneousGesture(TapGesture().onEnded { model.selection = i })
+                    .popover(isPresented: Binding(get: { model.previewing && i == model.selection },
+                                                  set: { if !$0 { model.previewing = false } }), arrowEdge: popoverEdge) {
+                        PreviewView(item: model.store.get(item.id) ?? item, store: model.store)
+                    }
+                    .contextMenu {
+                        Button("Incolla", systemImage: "doc.on.clipboard") { actions.paste(item, .normal) }
+                        Button(item.kind == .image ? "Incolla solo il testo dell’immagine" : "Incolla come testo semplice", systemImage: "textformat") { actions.paste(item, .plain) }
+                        Button("Incolla per agenti (pulito, senza segreti)", systemImage: "lock.shield") { actions.paste(item, .agent) }
+                        Button("Copia", systemImage: "doc.on.doc") { actions.copy(item) }
+                        Button("Anteprima", systemImage: "eye") { model.selection = i; model.previewing = true }
+                        Divider()
+                        Button("Elimina", systemImage: "trash", role: .destructive) { model.delete(item) }
+                    }
+            }
     }
 
     /// Etichetta del giorno quando cambia rispetto alla card precedente.
@@ -127,15 +156,22 @@ struct PanelView: View {
         return d.formatted(.dateTime.weekday(.wide).day().month(.abbreviated))
     }
 
-    private var hints: some View {
-        HStack(spacing: 14) {
-            ForEach([("↩", String(localized: "incolla")), ("⇧↩", String(localized: "testo semplice")), ("⌥↩", String(localized: "per agenti")),
-                         ("␣", String(localized: "anteprima")), ("⌘⌫", String(localized: "elimina")), ("esc", String(localized: "chiudi"))], id: \.0) { k, v in
-                HStack(spacing: 5) { KeyCap(k); Text(v) }
-            }
-            Spacer()
-            if let it = model.selected, let tags = it.tags {
-                Text(tags.split(separator: ",").prefix(5).joined(separator: " ·")).lineLimit(1).foregroundStyle(.tertiary)
+    @ViewBuilder private var hints: some View {
+        let keys = ForEach([("↩", String(localized: "incolla")), ("⇧↩", String(localized: "testo semplice")), ("⌥↩", String(localized: "per agenti")),
+                            ("␣", String(localized: "anteprima")), ("⌘⌫", String(localized: "elimina")), ("esc", String(localized: "chiudi"))], id: \.0) { k, v in
+            HStack(spacing: 5) { KeyCap(k); Text(v) }
+        }
+        Group {
+            if edge.isVertical {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 130), alignment: .leading)], alignment: .leading, spacing: 6) { keys }
+            } else {
+                HStack(spacing: 14) {
+                    keys
+                    Spacer()
+                    if let it = model.selected, let tags = it.tags {
+                        Text(tags.split(separator: ",").prefix(5).joined(separator: " ·")).lineLimit(1).foregroundStyle(.tertiary)
+                    }
+                }
             }
         }
         .font(Theme.ui(11)).foregroundStyle(.secondary)
@@ -154,12 +190,10 @@ struct PanelView: View {
 
 struct DaySeparator: View {
     let text: String
+    var vertical = false
     var body: some View {
-        Text(text)
-            .font(Theme.ui(11, .semibold))
-            .foregroundStyle(.secondary)
-            .fixedSize()
-            .rotationEffect(.degrees(-90))
-            .frame(width: 18, height: CardView.size.height)
+        let t = Text(text).font(Theme.ui(11, .semibold)).foregroundStyle(.secondary).fixedSize()
+        if vertical { t.frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 4) }
+        else { t.rotationEffect(.degrees(-90)).frame(width: 18, height: CardView.size.height) }
     }
 }

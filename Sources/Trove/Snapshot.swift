@@ -13,6 +13,8 @@ enum Snapshot {
         let model = AppModel(store: store)
         RunLoop.main.run(until: Date().addingTimeInterval(1.2))
         let actions = PanelActions(paste: { _, _ in }, copy: { _ in }, settings: {})
+        UserDefaults.standard.set(PanelEdge.bottom.rawValue, forKey: "panelEdge")
+        defer { UserDefaults.standard.removeObject(forKey: "panelEdge") }
         for (mode, look) in [("dark", NSAppearance.Name.darkAqua), ("light", .aqua)] {
             func save(_ view: some View, _ size: NSSize, _ name: String) {
                 Snapshot.save(view, size: size, appearance: look, to: dir.appendingPathComponent("\(name)-\(mode).png"))
@@ -21,6 +23,9 @@ enum Snapshot {
             model.selection = 1
             RunLoop.main.run(until: Date().addingTimeInterval(0.6))
             save(PanelView(model: model, actions: actions), NSSize(width: 1500, height: PanelController.height), "panel")
+            UserDefaults.standard.set(PanelEdge.left.rawValue, forKey: "panelEdge")
+            save(PanelView(model: model, actions: actions), NSSize(width: PanelController.sideWidth, height: 900), "panel-side")
+            UserDefaults.standard.set(PanelEdge.bottom.rawValue, forKey: "panelEdge")
             model.query = "dentista"
             RunLoop.main.run(until: Date().addingTimeInterval(0.6))
             save(PanelView(model: model, actions: actions), NSSize(width: 1500, height: PanelController.height), "panel-search")
@@ -31,6 +36,10 @@ enum Snapshot {
                 save(PreviewView(item: it, store: store), NSSize(width: 640, height: 460), "preview")
             }
             save(SettingsView(s: SettingsModel(), app: model), NSSize(width: 560, height: 820), "settings")
+            for p in 0..<6 { save(TutorialView(combo: "⇧⌘V", page: p) {}, NSSize(width: 680, height: 500), "tutorial-\(p)") }
+            UserDefaults.standard.set(PanelEdge.left.rawValue, forKey: "panelEdge")
+            save(TutorialView(combo: "⇧⌘V", page: 1) {}, NSSize(width: 680, height: 500), "tutorial-1-side")
+            UserDefaults.standard.set(PanelEdge.bottom.rawValue, forKey: "panelEdge")
         }
     }
 
