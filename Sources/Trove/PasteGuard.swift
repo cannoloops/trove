@@ -30,6 +30,8 @@ enum PasteGuard {
         lastEvent = Date()
         guard e.type == .keyDown, e.keyCode == 9, e.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
               Date() > ignoreUntil, Paster.redactForAI,
+              // leggere gli appunti dopo il ⌘V di un'altra app fa chiedere il permesso da macOS a ogni incolla
+              NSPasteboard.general.accessBehavior == .alwaysAllow,
               let app = NSWorkspace.shared.frontmostApplication, let bid = app.bundleIdentifier,
               Paster.aiApps.contains(bid) || browsers.contains(bid),
               let text = NSPasteboard.general.string(forType: .string) else { return }

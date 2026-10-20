@@ -111,6 +111,10 @@ struct SettingsView: View {
             } header: { Label("Generale", systemImage: "gearshape") }
             Section {
                 Toggle("Oscura i segreti nelle chat AI", isOn: $s.redactForAI)
+                if s.redactForAI, NSPasteboard.general.accessBehavior != .alwaysAllow {
+                    Text("Per il controllo anche sui ⌘V fatti a mano, imposta Trove su «Consenti sempre» in Impostazioni di Sistema › Privacy e sicurezza › Incolla da altre app.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
             } header: { Label("AI e agenti", systemImage: "sparkles") } footer: {
                 Text("Quando incolli in ChatGPT, Claude, Perplexity o Gemini, chiavi API, token, password, carte e IBAN vengono sostituiti da segnaposto come <OPENAI_KEY_1> e compare un avviso. Nei terminali ↩ incolla il testo così com’è. ⌥↩ incolla in qualsiasi app la versione pulita, senza segreti. Le immagini incollate in un terminale diventano il percorso del file.")
                     .font(.caption).foregroundStyle(.secondary)

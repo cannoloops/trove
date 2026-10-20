@@ -81,6 +81,7 @@
 "Autorizzato" = "Permission granted";
 "Autorizza in Accessibilità…" = "Grant Accessibility access";
 "Oscura i segreti nelle chat AI" = "Hide secrets in AI chats";
+"Per il controllo anche sui ⌘V fatti a mano, imposta Trove su «Consenti sempre» in Impostazioni di Sistema › Privacy e sicurezza › Incolla da altre app." = "To also check pastes you make with ⌘V, set Trove to “Always Allow” in System Settings › Privacy & Security › Paste from Other Apps.";
 "AI e agenti" = "AI and agents";
 "Quando incolli in ChatGPT, Claude, Perplexity o Gemini, chiavi API, token, password, carte e IBAN vengono sostituiti da segnaposto come <OPENAI_KEY_1> e compare un avviso. Nei terminali ↩ incolla il testo così com’è. ⌥↩ incolla in qualsiasi app la versione pulita, senza segreti. Le immagini incollate in un terminale diventano il percorso del file." = "In ChatGPT, Claude, Perplexity and Gemini, API keys, tokens, passwords, cards and IBANs become placeholders like <OPENAI_KEY_1>, with a notice. In terminals ↩ pastes as is; ⌥↩ pastes the cleaned version without secrets anywhere. Images pasted into a terminal become the file path.";
 "Backup su Google Drive" = "Backup to Google Drive";
