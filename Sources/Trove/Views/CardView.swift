@@ -50,6 +50,7 @@ struct CardView: View {
             Group {
                 if f.secret { Image(systemName: "lock.fill").help("Contiene segreti: ⌥↩ li sostituisce con segnaposto") }
                 if f.dirty { Image(systemName: "terminal").help("Testo da terminale: ⌥↩ lo incolla pulito") }
+                if item.kind == .image, !(item.ocr ?? "").isEmpty { Image(systemName: "text.viewfinder").help("⌥↩ incolla il percorso, ⇧↩ il testo riconosciuto") }
             }
             .font(Theme.ui(10, .semibold)).foregroundStyle(.secondary)
             Text(detail).font(Theme.ui(10)).foregroundStyle(.secondary).lineLimit(1).monospacedDigit()

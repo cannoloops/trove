@@ -47,7 +47,7 @@ Terminal artifacts are stripped, and API keys, passwords, card numbers, IBANs, I
 
 - Pasting with Trove (↩) into the ChatGPT, Codex, Claude, Perplexity or Gemini apps masks secrets automatically (you can turn this off in Settings › AI and agents).
 - Pasting with ⌘V into those apps, or into their websites in Safari, Chrome, Arc, Brave, Edge or Firefox, offers to hide what Trove recognizes.
-- Images pasted into a terminal become a file path; ⇧↩ on an image pastes only the recognized text.
+- On an image, ⌥↩ pastes the file path and ⇧↩ the recognized text; images pasted into a terminal become the path.
 
 Also: optional backup to Google Drive for desktop (`My Drive/Trove`), light and dark themes, English and Italian UI.
 
