@@ -68,7 +68,7 @@ struct SettingsView: View {
     @ObservedObject var app: AppModel
     @State private var confirmRestore = false
     @State private var confirmClear = false
-    @AppStorage("panelEdge") private var panelEdge = PanelEdge.left
+    @AppStorage("panelEdge") private var panelEdge = PanelEdge.right
     @AppStorage("appearance") private var appearance = "dark"
 
     var body: some View {

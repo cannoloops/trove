@@ -5,7 +5,7 @@ import TroveCore
 /// Lato dello schermo da cui esce il pannello.
 enum PanelEdge: String, CaseIterable {
     case bottom, top, left, right
-    static var current: PanelEdge { UserDefaults.standard.string(forKey: "panelEdge").flatMap(PanelEdge.init) ?? .left }
+    static var current: PanelEdge { UserDefaults.standard.string(forKey: "panelEdge").flatMap(PanelEdge.init) ?? .right }
     var isVertical: Bool { self == .left || self == .right }
 }
 

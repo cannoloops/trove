@@ -27,7 +27,7 @@ Text, rich text, links, images, files and colors, with the app they came from. S
   <img alt="The side panel, moved with the arrow keys" src="docs/screenshots/keyboard-light.png">
 </picture>
 
-The panel opens from the side of the screen you choose in Settings (left by default). Move with ↑ ↓ (← → when it sits at the top or bottom), press ↩ to paste into the app you were using.
+The panel opens from the side of the screen you choose in Settings (right by default). Move with ↑ ↓ (← → when it sits at the top or bottom), press ↩ to paste into the app you were using.
 
 ## ⌥↩ pastes the clean version
 
