@@ -26,6 +26,18 @@ import Testing
         }
     }
 
+    @Test func exactBeforeWordsBeforeFuzzy() throws {
+        let s = try Store(directory: tempDir())
+        let now = Date()
+        try s.insert(textItem("Fattura Enel di ottobre", at: now.addingTimeInterval(-300)))
+        try s.insert(textItem("enel: la fattura arriva domani", at: now.addingTimeInterval(-200)))
+        try s.insert(textItem("fatura enell", at: now.addingTimeInterval(-100))) // più recente, ma solo per assonanza
+        try s.insert(textItem("banana bread", at: now))
+        #expect(Search.run(Query.parse("fattura enel"), store: s).map(\.text)
+                == ["Fattura Enel di ottobre", "enel: la fattura arriva domani", "fatura enell"])
+        #expect(Search.run(Query.parse("\"fattura enel\""), store: s).map(\.text) == ["Fattura Enel di ottobre"])
+    }
+
     @Test func accentInsensitive() throws {
         let s = try Store(directory: tempDir())
         try s.insert(textItem("perché è così"))

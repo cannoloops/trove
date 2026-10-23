@@ -89,7 +89,7 @@ Type to search. Words can be combined with filters:
 | `app:` source app | `app:safari` |
 | `today`, `yesterday`, `week`, `month` | `password reset week` |
 
-Search is typo-tolerant and ignores accents. It also matches text recognized inside images and, when the semantic index is ready, things with a similar meaning ("receipt" finds "invoice"). Italian filter names (`tipo:`, `oggi`, `ieri`, `settimana`, `mese`) work too.
+Search is typo-tolerant and ignores accents. It also matches text recognized inside images and, when the semantic index is ready, things with a similar meaning ("receipt" finds "invoice"). Italian filter names (`tipo:`, `oggi`, `ieri`, `settimana`, `mese`) work too. Exact matches come first, then items containing all the words, then near matches. Put the query in quotes ("enel invoice") to see only exact matches.
 
 More in the [user guide](docs/guide.md): smart paste, secrets, backup and restore, privacy, troubleshooting and uninstalling.
 

@@ -55,31 +55,42 @@ public enum Search {
                 && (q.since.map { it.createdAt >= $0 } ?? true)
         }
         if Task.isCancelled { return [] }
-        let text = q.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        var text = q.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        // "tra virgolette": solo la frase esatta
+        let exactOnly = text.count > 2 && text.hasPrefix("\"") && text.hasSuffix("\"")
+        if exactOnly { text = String(text.dropFirst().dropLast()) }
         guard !text.isEmpty else { return Array(items.sorted { $0.createdAt > $1.createdAt }.prefix(limit)) }
 
         let fts = Set(store.ftsSearch(text, limit: 5000))
         var expanded: [Int64: Int] = [:] // quanti termini di espansione colpiscono ogni elemento
-        for term in Set(expansions) where term.count >= 3 {
+        for term in Set(exactOnly ? [] : expansions) where term.count >= 3 {
             for id in store.ftsSearch(term, limit: 500) { expanded[id, default: 0] += 1 }
         }
-        let tokens = normalize(text).split(separator: " ").map(String.init)
-        let qvec = Embedder.embed(text)
+        let phrase = normalize(text)
+        let tokens = phrase.split(separator: " ").map(String.init)
+        let qvec = exactOnly ? nil : Embedder.embed(text)
 
-        var scored: [(ClipItem, Double)] = []
+        // livello: 0 frase esatta, 1 tutte le parole presenti, 2 assonanza (typo, sinonimi, significato)
+        var scored: [(ClipItem, tier: Int, score: Double)] = []
         for (n, it) in items.enumerated() {
             if n % 256 == 0, Task.isCancelled { return [] } // una nuova digitazione ha superato questa ricerca
+            // ponytail: frase esatta cercata nei primi 4000 caratteri; oltre, il match FTS la porta al livello 1
+            let norm = normalized(it)
+            if exactOnly { if norm.contains(phrase) { scored.append((it, 0, 0)) }; continue }
+            let fz = fuzzyScore(tokens, norm.split(separator: " ").map(String.init))
             var s = 0.0
             if fts.contains(it.id) { s += 1 }
-            s += fuzzyScore(tokens, words(it)) * 0.8
+            s += fz * 0.8
             if let n = expanded[it.id] { s += min(0.9, 0.3 * Double(n)) }
             if let qv = qvec, let e = it.embedding, it.embeddingLang == qv.lang {
                 let c = Double(Embedder.cosine(qv.vec, e))
                 if c >= 0.68 { s += c - 0.6 }
             }
-            if s > 0 { scored.append((it, s)) }
+            guard s > 0 else { continue }
+            let tier = norm.contains(phrase) ? 0 : fts.contains(it.id) || fz == 1 ? 1 : 2
+            scored.append((it, tier, s))
         }
-        scored.sort { $0.1 != $1.1 ? $0.1 > $1.1 : $0.0.createdAt > $1.0.createdAt }
+        scored.sort { $0.tier != $1.tier ? $0.tier < $1.tier : $0.score != $1.score ? $0.score > $1.score : $0.0.createdAt > $1.0.createdAt }
         return scored.prefix(limit).map(\.0)
     }
 
@@ -88,8 +99,8 @@ public enum Search {
             .components(separatedBy: CharacterSet.alphanumerics.inverted).filter { !$0.isEmpty }.joined(separator: " ")
     }
 
-    static func words(_ it: ClipItem) -> [String] {
-        normalize(String(it.searchableText.prefix(4000)) + " " + (it.sourceApp ?? "")).split(separator: " ").map(String.init)
+    static func normalized(_ it: ClipItem) -> String {
+        normalize(String(it.searchableText.prefix(4000)) + " " + (it.sourceApp ?? ""))
     }
 
     /// Media sui token della query: 1 se sottostringa di una parola, 0.8 se entro 1–2 errori; 0 se un token non trova nulla.
