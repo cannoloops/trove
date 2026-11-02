@@ -69,9 +69,15 @@ struct PanelView: View {
                     ProgressView().controlSize(.small)
                 } else if model.canSearchByMeaning {
                     Button { model.searchByMeaning(); searchFocused = true } label: {
-                        Label("per significato", systemImage: "sparkles").font(Theme.ui(11))
+                        // capsula colorata e manina: deve leggersi come pulsante, non come etichetta
+                        Label("per significato", systemImage: "sparkles").font(Theme.ui(11, .semibold))
+                            .padding(.horizontal, 8).padding(.vertical, 3)
+                            .background(Color.trove.opacity(0.14), in: Capsule())
+                            .overlay(Capsule().strokeBorder(Color.trove.opacity(0.35), lineWidth: 0.5))
+                            .contentShape(Capsule())
                     }
-                    .buttonStyle(.borderless).foregroundStyle(.secondary)
+                    .buttonStyle(.plain).foregroundStyle(Color.trove)
+                    .pointerStyle(.link)
                     .help("Cerca anche sinonimi e parole affini con Apple Intelligence")
                 }
             }
