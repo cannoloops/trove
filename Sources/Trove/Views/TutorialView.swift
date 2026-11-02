@@ -241,35 +241,43 @@ private struct PasteScene: View {
     }
 }
 
-/// Si digita "ricevuta": trova la fattura per significato e lo screenshot per il testo che contiene.
+/// Si digita "ricevuta": trova lo screenshot per il testo che contiene; con «per significato» anche la fattura.
 private struct SearchScene: View {
     let still: Bool
 
     var body: some View {
         let q = String(localized: "ricevuta")
-        let phases: [Int] = still ? [q.count] : Array(0...q.count)
+        // ultima fase: clic su «per significato»
+        let phases: [Int] = still ? [q.count + 1] : Array(0...q.count + 1)
         PhaseAnimator(phases) { n in frame(q, n) } animation: { n -> Animation in
-            let pause: Double = n == 0 ? 2.6 : n == q.count ? 0.15 : 0.11
+            let pause: Double = n == 0 ? 2.6 : n == q.count + 1 ? 1.1 : n == q.count ? 0.15 : 0.11
             return .easeOut(duration: 0.25).delay(pause)
         }
         .accessibilityHidden(true)
     }
 
     private func frame(_ q: String, _ n: Int) -> some View {
-        let done = n == q.count
+        let done = n >= q.count, meaning = n > q.count
         return VStack(spacing: 16) {
             HStack(spacing: 6) {
                 Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
                 Text(verbatim: String(q.prefix(n))).font(Theme.ui(14))
                 Rectangle().fill(Color.trove).frame(width: 1.5, height: 16).padding(.leading, -4)
                 Spacer()
-                Label("anche per significato", systemImage: "sparkles").font(Theme.ui(10, .medium))
-                    .foregroundStyle(Color.trove).opacity(done ? 1 : 0)
+                if meaning {
+                    Label("anche per significato", systemImage: "sparkles").font(Theme.ui(10, .medium)).foregroundStyle(Color.trove)
+                } else {
+                    Label("per significato", systemImage: "sparkles").font(Theme.ui(10, .semibold)).foregroundStyle(Color.trove)
+                        .padding(.horizontal, 7).padding(.vertical, 2)
+                        .background(Color.trove.opacity(0.14), in: Capsule())
+                        .overlay(Capsule().strokeBorder(Color.trove.opacity(0.35), lineWidth: 0.5))
+                        .opacity(done ? 1 : 0)
+                }
             }
             .padding(.horizontal, 10).frame(width: 440, height: 34)
             .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: Theme.fieldRadius, style: .continuous))
             HStack(spacing: 10) {
-                Mini(icon: "doc.text", text: "Fattura Enel n. 4471 · 84,20 €", app: "Mail", selected: done, badge: done ? "per significato" : nil)
+                Mini(icon: "doc.text", text: "Fattura Enel n. 4471 · 84,20 €", app: "Mail", selected: meaning, dim: done && !meaning, badge: meaning ? "per significato" : nil)
                 Mini(icon: "photo", text: "RICEVUTA DI PAGAMENTO", app: "Screenshot", selected: done, badge: done ? "testo nelle immagini" : nil, image: true)
                 Mini(icon: "chevron.left.forwardslash.chevron.right", text: "func greet(_ name: String)", app: "Xcode", dim: done)
                 Mini(icon: "link", text: "apple.com/it/iphone", app: "Safari", dim: done)
