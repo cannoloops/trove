@@ -65,6 +65,14 @@ struct PanelView: View {
                 if model.semanticActive {
                     Text("anche per significato").font(Theme.ui(11)).foregroundStyle(.secondary)
                         .help("Risultati anche per significato, oltre che per parole")
+                } else if model.semanticLoading {
+                    ProgressView().controlSize(.small)
+                } else if model.canSearchByMeaning {
+                    Button { model.searchByMeaning(); searchFocused = true } label: {
+                        Label("per significato", systemImage: "sparkles").font(Theme.ui(11))
+                    }
+                    .buttonStyle(.borderless).foregroundStyle(.secondary)
+                    .help("Cerca anche sinonimi e parole affini con Apple Intelligence")
                 }
             }
             .padding(.horizontal, 10).padding(.vertical, 6)

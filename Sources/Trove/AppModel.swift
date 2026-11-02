@@ -12,6 +12,7 @@ final class AppModel: ObservableObject {
     @Published var selection = 0
     @Published var previewing = false
     @Published private(set) var semanticActive = false
+    @Published private(set) var semanticLoading = false
     @Published private(set) var totalCount = 0
     /// Cambia ogni volta che il pannello si apre: la vista rifocalizza la ricerca.
     @Published var openToken = 0
@@ -19,6 +20,8 @@ final class AppModel: ObservableObject {
     private var corpus: [ClipItem] = []
     private var searchTask: Task<Void, Never>?
     private var semanticTask: Task<Void, Never>?
+    /// Sinonimi chiesti con «per significato»: restano finché non cambia la query.
+    private var expansions: [String] = []
     private var reloadPending = false
 
     init(store: Store) {
@@ -40,38 +43,41 @@ final class AppModel: ObservableObject {
                 let all = await Task.detached(priority: .userInitiated) { store.all() }.value
                 self.corpus = all
                 self.totalCount = all.count
-                self.runSearch(expansions: nil)
+                self.runSearch()
             }
         }
     }
 
     private func scheduleSearch() {
         selection = 0
-        runSearch(expansions: nil, keepSelection: false)
+        semanticTask?.cancel()
+        semanticLoading = false
+        expansions = []
+        runSearch(keepSelection: false)
     }
 
     /// `keepSelection`: dopo un aggiornamento della stessa ricerca resta sull'elemento scelto; con una query nuova si riparte dal primo.
-    private func runSearch(expansions: [String]?, keepSelection: Bool = true) {
+    private func runSearch(keepSelection: Bool = true) {
         var q = Query.parse(query)
         if let k = kindFilter { q.kinds.insert(k) }
-        let corpus = corpus, store = store
+        let corpus = corpus, store = store, expansions = expansions
         searchTask?.cancel()
         searchTask = Task { [weak self] in
             // funzione nonisolated: gira fuori dal main thread ma eredita la cancellazione di questo task
-            let r = await Self.search(q, store: store, corpus: corpus, expansions: expansions ?? [])
+            let r = await Self.search(q, store: store, corpus: corpus, expansions: expansions)
             guard !Task.isCancelled, let self else { return }
             do {
                 let keep = keepSelection ? self.selected?.id : nil
                 self.results = r
                 if let keep, let i = r.firstIndex(where: { $0.id == keep }) { self.selection = i }
                 else { self.selection = min(self.selection, max(0, r.count - 1)) }
-                self.semanticActive = expansions != nil && !(expansions ?? []).isEmpty
+                self.semanticActive = !expansions.isEmpty
             }
         }
-        if expansions == nil { scheduleSemantic(q.text) }
     }
 
-    /// Dopo una pausa nella digitazione chiede al modello on-device sinonimi it/en e rilancia la ricerca.
+    /// Il modello impiega circa un secondo: con una query lunga almeno 3 caratteri si può chiedere la ricerca per significato.
+    var canSearchByMeaning: Bool { Query.parse(query).text.count >= 3 && SemanticTagger.isAvailable }
     nonisolated private static func search(_ q: Query, store: Store, corpus: [ClipItem], expansions: [String]) async -> [ClipItem] {
         Search.run(q, store: store, corpus: corpus, expansions: expansions, limit: 2000)
     }
@@ -83,7 +89,7 @@ final class AppModel: ObservableObject {
             guard var it = await Task.detached(priority: .utility, operation: { store.get(id) }).value else { return }
             it.rtf = nil; it.html = nil // il corpus resta leggero
             if let i = corpus.firstIndex(where: { $0.id == id }) { corpus[i] = it } else { corpus.insert(it, at: 0) }
-            if !query.isEmpty || kindFilter != nil { runSearch(expansions: nil) }
+            if !query.isEmpty || kindFilter != nil { runSearch() }
             else if let i = results.firstIndex(where: { $0.id == id }) { results[i] = it }
         }
     }
@@ -98,16 +104,17 @@ final class AppModel: ObservableObject {
         selection = min(selection, max(0, results.count - 1))
     }
 
-    private func scheduleSemantic(_ text: String) {
-        semanticTask?.cancel()
-        semanticActive = false
-        guard text.count >= 3, SemanticTagger.isAvailable else { return }
+    /// Solo su richiesta: chiede al modello on-device sinonimi it/en e rilancia la ricerca, così i risultati non cambiano da soli.
+    func searchByMeaning() {
+        guard canSearchByMeaning, !semanticLoading else { return }
+        let text = Query.parse(query).text
+        semanticLoading = true
         semanticTask = Task { [weak self] in
-            try? await Task.sleep(for: .milliseconds(450))
-            guard !Task.isCancelled else { return }
             let exp = await SemanticTagger.expand(query: text)
             guard !Task.isCancelled, let self, Query.parse(self.query).text == text else { return }
-            self.runSearch(expansions: exp)
+            self.semanticLoading = false
+            self.expansions = exp
+            self.runSearch()
         }
     }
 
