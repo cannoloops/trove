@@ -65,17 +65,16 @@ struct CardView: View {
         case .file: item.filePaths.count == 1 ? String(localized: "1 file") : String(localized: "\(item.filePaths.count) file")
         case .link: String(localized: "link")
         case .color: String(localized: "colore")
-        default:
-            CodeStyle.language(of: item.text).map { _ in String(localized: "\(item.text.split(separator: "\n", omittingEmptySubsequences: false).count) righe") }
-                ?? String(localized: "\(item.text.count) car.")
+        default: Flags.of(item).size
         }
     }
 }
 
-/// Segreti, testo "sporco" da terminale e testo da mostrare nella card, calcolati una volta per elemento.
+/// Segreti, testo "sporco" da terminale, testo da mostrare, linguaggio e dimensione: calcolati una volta per elemento,
+/// non a ogni render (su testi lunghi costano decine di ms e la lista scatta).
 @MainActor
 enum Flags {
-    struct Info { var secret: Bool; var dirty: Bool; var shown: String }
+    struct Info { var secret: Bool; var dirty: Bool; var shown: String; var lang: String? = nil; var size = "" }
     // ponytail: cache senza eviction, chiave id+hash (gli id SQLite possono essere riusati); basta per qualche decina di migliaia di card
     private static var cache: [String: Info] = [:]
 
@@ -89,7 +88,10 @@ enum Flags {
         let dirty = it.kind == .text && Cleaner.needsCleaning(head, fromTerminal: term)
         var shown = dirty ? Cleaner.clean(String(head.prefix(4000)), fromTerminal: term) : head
         if secret { shown = Secrets.redact(shown).text }
-        let c = Info(secret: secret, dirty: dirty, shown: shown)
+        let lang = CodeStyle.language(of: shown)
+        let size = lang.map { _ in String(localized: "\(it.text.split(separator: "\n", omittingEmptySubsequences: false).count) righe") }
+            ?? String(localized: "\(it.text.count) car.")
+        let c = Info(secret: secret, dirty: dirty, shown: shown, lang: lang, size: size)
         cache[key] = c
         return c
     }
@@ -123,7 +125,7 @@ struct ItemBody: View {
         case .file: files
         case .richText: richText
         case .text:
-            if let lang = CodeStyle.language(of: shown) { code(lang) } else { prose(Text(String(shown.prefix(compact ? 500 : 20000)))) }
+            if let lang = compact ? Flags.of(item).lang : CodeStyle.language(of: shown) { code(lang) } else { prose(Text(String(shown.prefix(compact ? 500 : 20000)))) }
         }
     }
 
