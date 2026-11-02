@@ -113,7 +113,8 @@ struct PanelView: View {
                 guard model.results.indices.contains(new) else { return }
                 withAnimation(.easeOut(duration: 0.12)) { proxy.scrollTo(model.results[new].id, anchor: .center) }
             }
-            .onChange(of: model.query) { if let f = model.results.first { proxy.scrollTo(f.id, anchor: edge.isVertical ? .top : .leading) } }
+            // sui risultati, non sulla query: la ricerca è asincrona e alla digitazione la lista è ancora la vecchia
+            .onChange(of: model.results.first?.id) { if model.selection == 0, let f = model.results.first { proxy.scrollTo(f.id, anchor: edge.isVertical ? .top : .leading) } }
         }
     }
 

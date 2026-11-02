@@ -47,10 +47,11 @@ final class AppModel: ObservableObject {
 
     private func scheduleSearch() {
         selection = 0
-        runSearch(expansions: nil)
+        runSearch(expansions: nil, keepSelection: false)
     }
 
-    private func runSearch(expansions: [String]?) {
+    /// `keepSelection`: dopo un aggiornamento della stessa ricerca resta sull'elemento scelto; con una query nuova si riparte dal primo.
+    private func runSearch(expansions: [String]?, keepSelection: Bool = true) {
         var q = Query.parse(query)
         if let k = kindFilter { q.kinds.insert(k) }
         let corpus = corpus, store = store
@@ -60,7 +61,7 @@ final class AppModel: ObservableObject {
             let r = await Self.search(q, store: store, corpus: corpus, expansions: expansions ?? [])
             guard !Task.isCancelled, let self else { return }
             do {
-                let keep = self.selected?.id
+                let keep = keepSelection ? self.selected?.id : nil
                 self.results = r
                 if let keep, let i = r.firstIndex(where: { $0.id == keep }) { self.selection = i }
                 else { self.selection = min(self.selection, max(0, r.count - 1)) }
