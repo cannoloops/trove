@@ -18,15 +18,13 @@ public enum SemanticTagger {
     Translate the meaning of the text into English, then reply ONLY with 10 comma-separated lowercase English keywords \
     (topic, synonyms, professions, places, objects, category). Every keyword must be an English word, even if the text is Italian.
     """
-    static let expandIT = """
-    Sei il motore di ricerca di un'app di appunti. Dato un termine di ricerca, rispondi SOLO con 8 parole italiane minuscole \
-    separate da virgola: sinonimi e parole che comparirebbero in una nota pertinente (oggetti, luoghi, professioni, documenti). \
-    Nessun'altra parola.
-    """
-    static let expandEN = """
-    You are the search engine of a notes app. Given a search term in any language, reply ONLY with 8 lowercase English words \
-    separated by commas: synonyms and words that would appear in a relevant note (objects, places, professions, documents). \
-    No other words.
+    /// Una sola richiesta (il modello è lento e non accetta richieste concorrenti): righe etichettate it/en,
+    /// così non scivola tutto nella lingua della query.
+    static let expand = """
+    Sei il motore di ricerca di un'app di appunti. Dato un termine di ricerca, rispondi SOLO con due righe:
+    it: esattamente 8 parole italiane minuscole separate da virgola
+    en: exactly 8 lowercase English words separated by commas
+    Sinonimi e parole che comparirebbero in una nota pertinente (oggetti, luoghi, professioni, documenti). Nessun'altra parola.
     """
 
     public static func keywords(for text: String) async -> [String] {
@@ -38,9 +36,7 @@ public enum SemanticTagger {
     }
 
     public static func expand(query: String) async -> [String] {
-        let it = await ask(instructions: expandIT, prompt: query)
-        let en = await ask(instructions: expandEN, prompt: query)
-        return unique(it + en)
+        await ask(instructions: expand, prompt: query)
     }
 
     private static func unique(_ words: [String]) -> [String] {
